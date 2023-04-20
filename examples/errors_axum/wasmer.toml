@@ -1,0 +1,18 @@
+[package]
+name = "syrusakbary/errors_axum"
+version = "0.2.2"
+description = "Leptos errors_axum example"
+
+[[module]]
+name = "server"
+source = "target/wasm32-wasmer-wasi/release/errors_axum.wasi.wasm"
+abi = "wasi"
+
+[[command]]
+name = "server"
+runner = "wasi"
+module = "server"
+
+[command.annotations.wasi]
+atom = "server"
+env = ["LEPTOS_OUTPUT_NAME=errors_axum"]
