@@ -54,7 +54,8 @@ pub fn App(cx: Scope) -> impl IntoView {
 
 #[component]
 pub fn ExampleErrors(cx: Scope) -> impl IntoView {
-    let generate_internal_error = create_server_action::<CauseInternalServerError>(cx);
+    let generate_internal_error =
+        create_server_action::<CauseInternalServerError>(cx);
 
     view! { cx,
         <p>
@@ -64,9 +65,9 @@ pub fn ExampleErrors(cx: Scope) -> impl IntoView {
         </p>
         <p>
             "After pressing this button check browser network tools. Can be used even when WASM is blocked:"
-            // <ActionForm action=generate_internal_error>
-                // <input name="error1" type="submit" value="Generate Internal Server Error"/>
-            // </ActionForm>
+            <ActionForm action=generate_internal_error>
+                <input name="error1" type="submit" value="Generate Internal Server Error"/>
+            </ActionForm>
         </p>
         <p>"The following <div> will always contain an error and cause this page to produce status 500. Check browser dev tools. "</p>
         <div>

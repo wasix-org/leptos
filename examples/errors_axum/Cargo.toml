@@ -36,7 +36,7 @@ tokio = { version = "=1.24.2", features = ["rt", "fs"], git = "https://github.co
 tokio-util = { version = "=0.7.3", features = ["rt"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed" }
 syn-rsx = { git = "https://github.com/theduke/syn-rsx.git", branch = "wasix" }
 proc-macro-error = { git = "https://github.com/theduke/proc-macro-error", branch = "wasix" }
-wasm-bindgen = { path = "../../../wasm-bindgen/" }
+wasm-bindgen = { git = "https://github.com/syrusakbary/wasm-bindgen", branch = "wasi" }
 
 [features]
 default = []

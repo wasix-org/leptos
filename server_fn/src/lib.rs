@@ -398,7 +398,7 @@ where
 {
     use ciborium::ser::into_writer;
     use serde_json::Deserializer as JSONDeserializer;
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
     let url = format!("{}{}", get_server_url(), url);
 
     #[derive(Debug)]
@@ -433,7 +433,7 @@ where
         Encoding::Cbor | Encoding::GetCBOR => "application/cbor",
     };
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
     let resp = match &enc {
         Encoding::Url | Encoding::Cbor => match args_encoded {
             Payload::Binary(b) => {
@@ -471,7 +471,7 @@ where
             }
         },
     };
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
     let resp = match &enc {
         Encoding::Url | Encoding::Cbor => match args_encoded {
             Payload::Binary(b) => CLIENT
@@ -512,13 +512,13 @@ where
 
     // check for error status
     let status = resp.status();
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
     let status = status.as_u16();
     if (500..=599).contains(&status) {
         let text = resp.text().await.unwrap_or_default();
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
         let status_text = resp.status_text();
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
         let status_text = status.to_string();
         return Err(serde_json::from_str(&text)
             .unwrap_or(ServerFnError::ServerError(status_text)));
@@ -526,19 +526,19 @@ where
 
     // Decoding the body of the request
     if (enc == Encoding::Cbor) || (enc == Encoding::GetCBOR) {
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
         let binary = resp
             .binary()
             .await
             .map_err(|e| ServerFnError::Deserialization(e.to_string()))?;
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
         let binary = binary.as_slice();
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
         let binary = resp
             .bytes()
             .await
             .map_err(|e| ServerFnError::Deserialization(e.to_string()))?;
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
         let binary = binary.as_ref();
 
         ciborium::de::from_reader(binary)
@@ -556,21 +556,42 @@ where
 }
 
 // Lazily initialize the client to be reused for all server function calls.
-#[cfg(any(all(not(feature = "ssr"), not(target_arch = "wasm32")), doc))]
+#[cfg(any(
+    all(
+        not(feature = "ssr"),
+        not(all(target_arch = "wasm32", target_os = "unknown"))
+    ),
+    doc
+))]
 static CLIENT: once_cell::sync::Lazy<reqwest::Client> =
     once_cell::sync::Lazy::new(|| reqwest::Client::new());
 
-#[cfg(any(all(not(feature = "ssr"), not(target_arch = "wasm32")), doc))]
+#[cfg(any(
+    all(
+        not(feature = "ssr"),
+        not(all(target_arch = "wasm32", target_os = "unknown"))
+    ),
+    doc
+))]
 static ROOT_URL: once_cell::sync::OnceCell<&'static str> =
     once_cell::sync::OnceCell::new();
 
-#[cfg(any(all(not(feature = "ssr"), not(target_arch = "wasm32")), doc))]
+#[cfg(any(
+    all(
+        not(feature = "ssr"),
+        not(all(target_arch = "wasm32", target_os = "unknown"))
+    ),
+    doc
+))]
 /// Set the root server url that all server function paths are relative to for the client. On WASM this will default to the origin.
 pub fn set_server_url(url: &'static str) {
     ROOT_URL.set(url).unwrap();
 }
 
-#[cfg(all(not(feature = "ssr"), not(target_arch = "wasm32")))]
+#[cfg(all(
+    not(feature = "ssr"),
+    not(all(target_arch = "wasm32", target_os = "unknown"))
+))]
 fn get_server_url() -> &'static str {
     ROOT_URL
         .get()
