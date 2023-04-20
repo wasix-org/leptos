@@ -9,7 +9,7 @@ use proc_macro2::TokenTree;
 use quote::ToTokens;
 use server_fn_macro::{server_macro_impl, ServerContext};
 use syn::parse_macro_input;
-use syn_rsx::{parse, NodeAttribute};
+use syn_rsx::{parse2, NodeAttribute};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Mode {
@@ -325,7 +325,7 @@ pub fn view(tokens: TokenStream) -> TokenStream {
                     .collect()
             };
 
-            match parse(tokens.into()) {
+            match parse2(tokens.into()) {
                 Ok(nodes) => render_view(
                     &proc_macro2::Ident::new(&cx.to_string(), cx.span()),
                     &nodes,
@@ -375,8 +375,9 @@ pub fn template(tokens: TokenStream) -> TokenStream {
             (Some(TokenTree::Ident(cx)), Some(TokenTree::Punct(punct)))
                 if punct.as_char() == ',' =>
             {
-                match parse(tokens.collect::<proc_macro2::TokenStream>().into())
-                {
+                match parse2(
+                    tokens.collect::<proc_macro2::TokenStream>().into(),
+                ) {
                     Ok(nodes) => render_template(
                         &proc_macro2::Ident::new(&cx.to_string(), cx.span()),
                         &nodes,

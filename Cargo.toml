@@ -14,15 +14,15 @@ members = [
 
   # integrations
   "integrations/actix",
-  "integrations/axum",
-  "integrations/viz",
+  # "integrations/axum",
+  # "integrations/viz",
   "integrations/utils",
 
   # libraries
   "meta",
   "router",
 ]
-exclude = ["benchmarks", "examples"]
+exclude = ["benchmarks", "examples", "integrations/axum"]
 
 [workspace.package]
 version = "0.2.5"
@@ -49,3 +49,12 @@ opt-level = 'z'
 
 [workspace.metadata.cargo-all-features]
 skip_feature_sets = [["csr", "ssr"], ["csr", "hydrate"], ["ssr", "hydrate"]]
+
+[patch.crates-io]
+socket2 = { git = "https://github.com/john-sharratt/socket2.git", branch = "v0.4.7" }
+libc = { git = "https://github.com/john-sharratt/libc.git" }
+tokio = { git = "https://github.com/john-sharratt/tokio.git", branch = "wasix-1.24.2" }
+tokio-util = { git = "https://github.com/john-sharratt/tokio.git", branch = "wasix-1.24.2" }
+syn-rsx = { path = "../../stoically/syn-rsx" }
+proc-macro-error = { path = "../../CreepySkeleton/proc-macro-error" }
+# hyper = { path = "../../hyperium/hyper" }

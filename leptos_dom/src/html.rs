@@ -3,7 +3,7 @@
 use cfg_if::cfg_if;
 
 cfg_if! {
-  if #[cfg(all(target_arch = "wasm32", feature = "web"))] {
+  if #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))] {
     use crate::events::*;
     use crate::macro_helpers::*;
     use crate::{mount_child, MountKind};
@@ -286,7 +286,7 @@ impl ElementDescriptor for Custom {
 }
 
 cfg_if! {
-  if #[cfg(all(target_arch = "wasm32", feature = "web"))] {
+  if #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))] {
     /// Represents an HTML element.
     #[derive(Clone)]
     pub struct HtmlElement<El: ElementDescriptor> {

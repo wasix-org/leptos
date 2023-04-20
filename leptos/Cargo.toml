@@ -25,13 +25,13 @@ leptos = { path = ".", default-features = false }
 [features]
 default = ["csr", "serde"]
 csr = [
-  "leptos_dom/web",
+  # "leptos_dom/web",
   "leptos_macro/csr",
   "leptos_reactive/csr",
   "leptos_server/csr",
 ]
 hydrate = [
-  "leptos_dom/web",
+  # "leptos_dom/web",
   "leptos_macro/hydrate",
   "leptos_reactive/hydrate",
   "leptos_server/hydrate",

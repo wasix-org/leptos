@@ -1,4 +1,4 @@
-#![cfg(not(all(target_arch = "wasm32", feature = "web")))]
+#![cfg(not(all(target_arch = "wasm32", target_family="unknown", feature = "web")))]
 
 //! Server-side HTML rendering utilities.
 

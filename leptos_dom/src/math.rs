@@ -6,7 +6,7 @@ use cfg_if::cfg_if;
 use leptos_reactive::Scope;
 use std::borrow::Cow;
 cfg_if! {
-  if #[cfg(all(target_arch = "wasm32", feature = "web"))] {
+  if #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))] {
     use once_cell::unsync::Lazy as LazyCell;
     use wasm_bindgen::JsCast;
   } else {
