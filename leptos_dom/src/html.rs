@@ -496,7 +496,8 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
             self
         }
 
-        #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))]
+        #[cfg(not(all(target_arch = "wasm32", target_family = "unknown", feature = "web")))]
+
         {
             let mut this = self;
 
@@ -579,7 +580,7 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
             });
         }
 
-        #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))]
+        #[cfg(not(all(target_arch = "wasm32", target_family = "unknown", feature = "web")))]
         {
             let _ = f;
         }

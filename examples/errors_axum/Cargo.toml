@@ -27,15 +27,15 @@ thiserror = "1.0.38"
 wasm-bindgen = "0.2"
 
 # tokio = { version = "1.22.0", features = ["full"], optional = true }
-tokio = { version = "=1.24.2", features = ["rt", "fs"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed"}
+tokio = { version = "=1.24.2", features = ["rt", "fs", "rt-multi-thread", "macros"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed", optional = true }
 
 [patch.crates-io]
 socket2 = { git = "https://github.com/john-sharratt/socket2.git", branch = "v0.4.7" }
 libc = { git = "https://github.com/john-sharratt/libc.git" }
-tokio = { version = "=1.24.2", features = ["rt", "fs"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed", optional = true }
+tokio = { version = "=1.24.2", features = ["rt", "fs"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed"}
 tokio-util = { version = "=0.7.3", features = ["rt"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed" }
 syn-rsx = { git = "https://github.com/theduke/syn-rsx.git", branch = "wasix" }
-proc-macro-error = { git = "https://github.com/proc-macro-error", branch = "wasix" }
+proc-macro-error = { git = "https://github.com/theduke/proc-macro-error", branch = "wasix" }
 
 [features]
 default = ["csr"]
