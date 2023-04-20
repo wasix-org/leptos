@@ -146,6 +146,7 @@ pub use additional_attributes::*;
 pub use leptos_config::{self, get_configuration, LeptosOptions};
 #[cfg(not(all(
     target_arch = "wasm32",
+    target_family = "unknown",
     any(feature = "csr", feature = "hydrate")
 )))]
 /// Utilities for server-side rendering HTML.

@@ -23,7 +23,7 @@ server_fn = { workspace = true, default-features = false }
 leptos = { path = ".", default-features = false }
 
 [features]
-default = ["csr", "serde"]
+default = ["serde"]
 csr = [
   # "leptos_dom/web",
   "leptos_macro/csr",

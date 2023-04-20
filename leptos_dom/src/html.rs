@@ -484,7 +484,7 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
     pub fn id(self, id: impl Into<Cow<'static, str>>) -> Self {
         let id = id.into();
 
-        #[cfg(all(target_arch = "wasm32", feature = "web"))]
+        #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))]
         {
             #[inline(never)]
             fn id_inner(el: &web_sys::HtmlElement, id: &str) {
@@ -496,7 +496,7 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
             self
         }
 
-        #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
+        #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))]
         {
             let mut this = self;
 
@@ -579,7 +579,7 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
             });
         }
 
-        #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
+        #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))]
         {
             let _ = f;
         }
@@ -592,7 +592,7 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
     /// This method will always return [`None`] on non-wasm CSR targets.
     #[inline(always)]
     pub fn is_mounted(&self) -> bool {
-        #[cfg(all(target_arch = "wasm32", feature = "web"))]
+        #[cfg(all(target_arch = "wasm32", target_family = "unknown", feature = "web"))]
         {
             #[inline(never)]
             fn is_mounted_inner(el: &web_sys::HtmlElement) -> bool {

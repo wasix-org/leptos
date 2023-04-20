@@ -9,7 +9,7 @@ repository = "https://github.com/leptos-rs/leptos"
 description = "Router for the Leptos web framework."
 
 [dependencies]
-leptos = { workspace = true }
+leptos = { workspace = true, default-features = false }
 cfg-if = "1"
 common_macros = "0.1"
 gloo-net = { version = "0.2", features = ["http"] }
