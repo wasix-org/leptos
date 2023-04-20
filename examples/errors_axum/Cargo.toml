@@ -22,23 +22,20 @@ simple_logger = "4.0.0"
 axum = { version = "=0.6.16", optional = true }
 tower = { version = "0.4.13", optional = true }
 tower-http = { version = "0.4", features = ["fs"], optional = true }
-# tokio = { version = "1.22.0", features = ["full"], optional = true }
-tokio = { version = "1.24.2", path = "../../../../john-sharratt/tokio/tokio", optional = true, features = ["macros", "rt-multi-thread"] }
 http = { version = "0.2.8" }
 thiserror = "1.0.38"
 wasm-bindgen = "0.2"
 
+# tokio = { version = "1.22.0", features = ["full"], optional = true }
+tokio = { version = "=1.24.2", features = ["rt", "fs"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed"}
+
 [patch.crates-io]
 socket2 = { git = "https://github.com/john-sharratt/socket2.git", branch = "v0.4.7" }
 libc = { git = "https://github.com/john-sharratt/libc.git" }
-# tokio = { git = "https://github.com/john-sharratt/tokio.git", branch = "wasix-1.24.2" }
-# tokio-util = { git = "https://github.com/john-sharratt/tokio.git", branch = "wasix-1.24.2" , features = ["rt"] }
-tokio = { version = "1.24.2", path = "../../../../john-sharratt/tokio/tokio" }
-tokio-util = {version = "=0.7.3", path = "../../../../john-sharratt/tokio/tokio-util" }
-syn-rsx = { path = "../../../../stoically/syn-rsx" }
-proc-macro-error = { path = "../../../../CreepySkeleton/proc-macro-error" }
-# hyper = { path = "../../hyperium/hyper" }
-
+tokio = { version = "=1.24.2", features = ["rt", "fs"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed", optional = true }
+tokio-util = { version = "=0.7.3", features = ["rt"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed" }
+syn-rsx = { git = "https://github.com/theduke/syn-rsx.git", branch = "wasix" }
+proc-macro-error = { git = "https://github.com/proc-macro-error", branch = "wasix" }
 
 [features]
 default = ["csr"]
