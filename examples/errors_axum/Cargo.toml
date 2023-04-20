@@ -7,8 +7,8 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-console_log = "1.0.0"
-console_error_panic_hook = "0.1.7"
+console_log = { version = "1.0.0" }
+console_error_panic_hook = { version = "0.1.7" }
 cfg-if = "1.0.0"
 leptos = { path = "../../../leptos/leptos", default-features = false, features = [
   "serde",
@@ -24,7 +24,7 @@ tower = { version = "0.4.13", optional = true }
 tower-http = { version = "0.4", features = ["fs"], optional = true }
 http = { version = "0.2.8" }
 thiserror = "1.0.38"
-wasm-bindgen = "0.2"
+wasm-bindgen = { version = "0.2" }
 
 # tokio = { version = "1.22.0", features = ["full"], optional = true }
 tokio = { version = "=1.24.2", features = ["rt", "fs", "rt-multi-thread", "macros"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed", optional = true }
@@ -36,9 +36,10 @@ tokio = { version = "=1.24.2", features = ["rt", "fs"], git = "https://github.co
 tokio-util = { version = "=0.7.3", features = ["rt"], git = "https://github.com/theduke/tokio.git", branch = "wasix-1.24.2-fixed" }
 syn-rsx = { git = "https://github.com/theduke/syn-rsx.git", branch = "wasix" }
 proc-macro-error = { git = "https://github.com/theduke/proc-macro-error", branch = "wasix" }
+wasm-bindgen = { path = "../../../wasm-bindgen/" }
 
 [features]
-default = ["csr"]
+default = []
 csr = ["leptos/csr", "leptos_meta/csr", "leptos_router/csr"]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
