@@ -286,7 +286,7 @@ impl Scope {
                         }
                         ScopeProperty::Effect(id) => {
                             cleanups.remove(id);
-                            runtime.nodes.borrow_mut().remove(id);
+                            nodes.remove(id);
                             runtime.node_sources.borrow_mut().remove(id);
                         }
                         ScopeProperty::Resource(id) => {
