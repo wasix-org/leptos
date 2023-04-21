@@ -44,6 +44,7 @@ type FxIndexSet<T> = IndexSet<T, BuildHasherDefault<FxHasher>>;
 #[derive(Default)]
 pub(crate) struct Runtime {
     pub shared_context: RefCell<SharedContext>,
+    pub owner: Cell<Option<NodeId>>,
     pub observer: Cell<Option<NodeId>>,
     pub scopes: RefCell<SlotMap<ScopeId, RefCell<Vec<ScopeProperty>>>>,
     pub scope_parents: RefCell<SparseSecondaryMap<ScopeId, ScopeId>>,
@@ -52,8 +53,8 @@ pub(crate) struct Runtime {
     pub scope_contexts:
         RefCell<SparseSecondaryMap<ScopeId, FxHashMap<TypeId, Box<dyn Any>>>>,
     #[allow(clippy::type_complexity)]
-    pub scope_cleanups:
-        RefCell<SparseSecondaryMap<ScopeId, Vec<Box<dyn FnOnce()>>>>,
+    pub on_cleanups:
+        RefCell<SparseSecondaryMap<NodeId, Vec<Box<dyn FnOnce()>>>>,
     pub stored_values: RefCell<SlotMap<StoredValueId, Rc<RefCell<dyn Any>>>>,
     pub nodes: RefCell<SlotMap<NodeId, ReactiveNode>>,
     pub node_subscribers:
@@ -72,7 +73,6 @@ pub(crate) struct Runtime {
 // is significantly inspired by Reactively (https://github.com/modderme123/reactively)
 impl Runtime {
     pub(crate) fn update_if_necessary(&self, node_id: NodeId) {
-        //crate::macros::debug_warn!("update_if_necessary {node_id:?}");
         if self.current_state(node_id) == ReactiveNodeState::Check {
             let sources = {
                 let sources = self.node_sources.borrow();
@@ -99,6 +99,16 @@ impl Runtime {
 
         // if we're dirty at this point, update
         if self.current_state(node_id) >= ReactiveNodeState::Dirty {
+            // first, run our cleanups, if any 
+            if let Some(cleanups) =
+                self.on_cleanups.borrow_mut().remove(node_id)
+            {
+                for cleanup in cleanups {
+                    cleanup();
+                }
+            }
+
+            // now, update the value 
             self.update(node_id);
         }
 
@@ -174,9 +184,11 @@ impl Runtime {
 
     fn with_observer<T>(&self, observer: NodeId, f: impl FnOnce() -> T) -> T {
         let prev_observer = self.observer.take();
+        self.owner.set(Some(observer));
         self.observer.set(Some(observer));
         let v = f();
         self.observer.set(prev_observer);
+        self.owner.set(prev_observer);
         v
     }
 
@@ -629,11 +641,13 @@ impl RuntimeId {
 
             // run the effect for the first time
             let prev_observer = runtime.observer.take();
+            runtime.owner.set(Some(id));
             runtime.observer.set(Some(id));
 
             effect.run(value);
 
             runtime.observer.set(prev_observer);
+            runtime.owner.set(prev_observer);
 
             id
         })
