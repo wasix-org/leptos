@@ -362,6 +362,7 @@ impl Scope {
     }
 }
 
+#[track_caller]
 #[cfg_attr(
     any(debug_assertions, features = "ssr"),
     instrument(level = "trace", skip_all,)
@@ -369,6 +370,7 @@ impl Scope {
 fn push_cleanup(
     cx: Scope,
     cleanup_fn: Box<dyn FnOnce()>,
+    #[cfg(debug_assertions)] defined_at: &'static std::panic::Location<'static>,
 ) {
     _ = with_runtime(cx.runtime, |runtime| {
         if let Some(owner) = runtime.owner.get() {
@@ -378,6 +380,12 @@ fn push_cleanup(
             } else {
                 cleanups.insert(owner, vec![cleanup_fn]);
             }
+        } else {
+            crate::macros::debug_warn!(
+                "At {defined_at}, you are calling `on_cleanup` outside the \
+                 reactive graph. This means that this cleanup function will \
+                 never be called."
+            );
         }
     });
 }
@@ -387,8 +395,9 @@ fn push_cleanup(
 /// It runs after child scopes have been disposed, but before signals, effects, and resources
 /// are invalidated.
 #[inline(always)]
+#[track_caller]
 pub fn on_cleanup(cx: Scope, cleanup_fn: impl FnOnce() + 'static) {
-    push_cleanup(cx, Box::new(cleanup_fn))
+    push_cleanup(cx, Box::new(cleanup_fn), #[cfg(debug_assertions)] std::panic::Location::caller())
 }
 
 slotmap::new_key_type! {
