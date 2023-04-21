@@ -254,16 +254,22 @@ impl Scope {
                 owned.map(|owned| owned.take())
             };
             if let Some(owned) = owned {
+                let mut nodes = runtime.nodes.borrow_mut();
+                let mut cleanups = runtime.on_cleanups.borrow_mut();
+
                 for property in owned {
                     match property {
                         ScopeProperty::Signal(id)
                         | ScopeProperty::Trigger(id) => {
                             // remove the signal
-                            runtime.nodes.borrow_mut().remove(id);
+                            nodes.remove(id);
                             let subs = runtime
                                 .node_subscribers
                                 .borrow_mut()
                                 .remove(id);
+
+                            // drop any of its cleanups
+                            cleanups.remove(id);
 
                             // each of the subs needs to remove the signal from its dependencies
                             // so that it doesn't try to read the (now disposed) signal
@@ -279,6 +285,7 @@ impl Scope {
                             }
                         }
                         ScopeProperty::Effect(id) => {
+                            cleanups.remove(id);
                             runtime.nodes.borrow_mut().remove(id);
                             runtime.node_sources.borrow_mut().remove(id);
                         }
