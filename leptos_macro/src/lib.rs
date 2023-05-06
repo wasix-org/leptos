@@ -5,7 +5,7 @@
 extern crate proc_macro_error;
 
 use proc_macro::TokenStream;
-use proc_macro2::TokenTree;
+use proc_macro2::{Span, TokenTree};
 use quote::ToTokens;
 use server_fn_macro::{server_macro_impl, ServerContext};
 use syn::parse_macro_input;
@@ -35,6 +35,7 @@ mod view;
 use template::render_template;
 use view::render_view;
 mod component;
+mod slot;
 mod template;
 
 /// The `view` macro uses RSX (like JSX, but Rust!) It follows most of the
@@ -200,7 +201,29 @@ mod template;
 /// # });
 /// ```
 ///
-/// 8. You can use the `node_ref` or `_ref` attribute to store a reference to its DOM element in a
+/// 8. Individual styles can also be set with `style:` or `style=("property-name", value)` syntax.
+/// ```rust
+/// # use leptos::*;
+/// # run_scope(create_runtime(), |cx| {
+/// # if !cfg!(any(feature = "csr", feature = "hydrate")) {
+/// let (x, set_x) = create_signal(cx, 0);
+/// let (y, set_y) = create_signal(cx, 0);
+/// view! { cx,
+///   <div
+///     style="position: absolute"
+///     style:left=move || format!("{}px", x())
+///     style:top=move || format!("{}px", y())
+///     style=("background-color", move || format!("rgb({}, {}, 100)", x(), y()))
+///   >
+///     "Moves when coordinates change"
+///   </div>
+/// }
+/// # ;
+/// # }
+/// # });
+/// ```
+///
+/// 9. You can use the `node_ref` or `_ref` attribute to store a reference to its DOM element in a
 ///    [NodeRef](https://docs.rs/leptos/latest/leptos/struct.NodeRef.html) to use later.
 /// ```rust
 /// # use leptos::*;
@@ -217,7 +240,7 @@ mod template;
 /// # });
 /// ```
 ///
-/// 9. You can add the same class to every element in the view by passing in a special
+/// 10. You can add the same class to every element in the view by passing in a special
 ///    `class = {/* ... */},` argument after `cx, `. This is useful for injecting a class
 ///    provided by a scoped styling library.
 /// ```rust
@@ -235,7 +258,7 @@ mod template;
 /// # });
 /// ```
 ///
-/// 10. You can set any HTML element’s `innerHTML` with the `inner_html` attribute on an
+/// 11. You can set any HTML element’s `innerHTML` with the `inner_html` attribute on an
 ///     element. Be careful: this HTML will not be escaped, so you should ensure that it
 ///     only contains trusted input.
 /// ```rust
@@ -282,6 +305,10 @@ mod template;
 /// ```
 #[proc_macro_error::proc_macro_error]
 #[proc_macro]
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    tracing::instrument(level = "trace", skip_all,)
+)]
 pub fn view(tokens: TokenStream) -> TokenStream {
     let tokens: proc_macro2::TokenStream = tokens.into();
     let mut tokens = tokens.into_iter();
@@ -623,9 +650,7 @@ pub fn component(args: proc_macro::TokenStream, s: TokenStream) -> TokenStream {
     let is_transparent = if !args.is_empty() {
         let transparent = parse_macro_input!(args as syn::Ident);
 
-        let transparent_token: syn::Ident = syn::parse_quote!(transparent);
-
-        if transparent != transparent_token {
+        if transparent != "transparent" {
             abort!(
                 transparent,
                 "only `transparent` is supported";
@@ -640,6 +665,128 @@ pub fn component(args: proc_macro::TokenStream, s: TokenStream) -> TokenStream {
 
     parse_macro_input!(s as component::Model)
         .is_transparent(is_transparent)
+        .into_token_stream()
+        .into()
+}
+
+/// Annotates a struct so that it can be used with your Component as a `slot`.
+///
+/// The `#[slot]` macro allows you to annotate plain Rust struct as component slots and use them
+/// within your Leptos [component](crate::component!) properties. The struct can contain any number
+/// of fields. When you use the component somewhere else, the names of the slot fields are the
+/// names of the properties you use in the [view](crate::view!) macro.
+///
+/// Here’s how you would define and use a simple Leptos component which can accept a custom slot:
+/// ```rust
+/// # use leptos::*;
+/// use std::time::Duration;
+///
+/// #[slot]
+/// struct HelloSlot {
+///     // Same prop syntax as components.
+///     #[prop(optional)]
+///     children: Option<Children>,
+/// }
+///
+/// #[component]
+/// fn HelloComponent(
+///     cx: Scope,
+///     /// Component slot, should be passed through the <HelloSlot slot> syntax.
+///     hello_slot: HelloSlot,
+/// ) -> impl IntoView {
+///     // mirror the children from the slot, if any were passed
+///     if let Some(children) = hello_slot.children {
+///         (children)(cx).into_view(cx)
+///     } else {
+///         ().into_view(cx)
+///     }
+/// }
+///
+/// #[component]
+/// fn App(cx: Scope) -> impl IntoView {
+///     view! { cx,
+///         <HelloComponent>
+///             <HelloSlot slot>
+///                 "Hello, World!"
+///             </HelloSlot>
+///         </HelloComponent>
+///     }
+/// }
+/// ```
+///
+/// /// Here are some important details about how slots work within the framework:
+/// 1. Most of the same rules from [component](crate::component!) macro should also be followed on slots.
+///
+/// 2. Specifying only `slot` without a name (such as in `<HelloSlot slot>`) will default the chosen slot to
+/// the a snake case version of the slot struct name (`hello_slot` for `<HelloSlot>`).
+///
+/// 3. Event handlers cannot be specified directly on the slot.
+///
+/// ```compile_error
+/// // ❌ This won't work
+/// # use leptos::*;
+///
+/// #[slot]
+/// struct SlotWithChildren {
+///     children: Children,
+/// }
+///
+/// #[component]
+/// fn ComponentWithSlot(cx: Scope, slot: SlotWithChildren) -> impl IntoView {
+///     (slot.children)(cx)
+/// }
+///
+/// #[component]
+/// fn App(cx: Scope) -> impl IntoView {
+///     view! { cx,
+///         <ComponentWithSlot>
+///           <SlotWithChildren slot:slot on:click=move |_| {}>
+///             <h1>"Hello, World!"</h1>
+///           </SlotWithChildren>
+///         </ComponentWithSlot>
+///     }
+/// }
+/// ```
+///
+/// ```
+/// // ✅ Do this instead
+/// # use leptos::*;
+///
+/// #[slot]
+/// struct SlotWithChildren {
+///     children: Children,
+/// }
+///
+/// #[component]
+/// fn ComponentWithSlot(cx: Scope, slot: SlotWithChildren) -> impl IntoView {
+///     (slot.children)(cx)
+/// }
+///
+/// #[component]
+/// fn App(cx: Scope) -> impl IntoView {
+///     view! { cx,
+///         <ComponentWithSlot>
+///           <SlotWithChildren slot:slot>
+///             <div on:click=move |_| {}>
+///               <h1>"Hello, World!"</h1>
+///             </div>
+///           </SlotWithChildren>
+///         </ComponentWithSlot>
+///     }
+/// }
+/// ```
+#[proc_macro_error::proc_macro_error]
+#[proc_macro_attribute]
+pub fn slot(args: proc_macro::TokenStream, s: TokenStream) -> TokenStream {
+    if !args.is_empty() {
+        abort!(
+            Span::call_site(),
+            "no arguments are supported";
+            help = "try just `#[slot]`"
+        );
+    }
+
+    parse_macro_input!(s as slot::Model)
         .into_token_stream()
         .into()
 }
@@ -691,8 +838,9 @@ pub fn component(args: proc_macro::TokenStream, s: TokenStream) -> TokenStream {
 /// - **Arguments must be implement [`Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html)
 ///   and [`DeserializeOwned`](https://docs.rs/serde/latest/serde/de/trait.DeserializeOwned.html).**
 ///   They are serialized as an `application/x-www-form-urlencoded`
-///   form data using [`serde_urlencoded`](https://docs.rs/serde_urlencoded/latest/serde_urlencoded/) or as `application/cbor`
-///   using [`cbor`](https://docs.rs/cbor/latest/cbor/).
+///   form data using [`serde_qs`](https://docs.rs/serde_qs/latest/serde_qs/) or as `application/cbor`
+///   using [`cbor`](https://docs.rs/cbor/latest/cbor/). **Note**: You should explicitly include `serde` with the
+///   `derive` feature enabled in your `Cargo.toml`. You can do this by running `cargo add serde --features=derive`.
 /// - **The `Scope` comes from the server.** Optionally, the first argument of a server function
 ///   can be a Leptos `Scope`. This scope can be used to inject dependencies like the HTTP request
 ///   or response or other server-only dependencies, but it does *not* have access to reactive state that exists in the client.

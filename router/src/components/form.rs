@@ -10,6 +10,10 @@ type OnResponse = Rc<dyn Fn(&web_sys::Response)>;
 
 /// An HTML [`form`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) progressively
 /// enhanced to use client-side routing.
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    tracing::instrument(level = "trace", skip_all,)
+)]
 #[component]
 pub fn Form<A>(
     cx: Scope,
@@ -202,6 +206,16 @@ where
 /// Automatically turns a server [Action](leptos_server::Action) into an HTML
 /// [`form`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
 /// progressively enhanced to use client-side routing.
+///
+/// ## Encoding
+/// **Note:** `<ActionForm/>` only works with server functions that use the
+/// default `Url` encoding or the `GetJSON` encoding, not with `CBOR` or other
+/// encoding schemes. This is to ensure that `<ActionForm/>` works correctly
+/// both before and after WASM has loaded.
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    tracing::instrument(level = "trace", skip_all,)
+)]
 #[component]
 pub fn ActionForm<I, O>(
     cx: Scope,
@@ -256,55 +270,61 @@ where
         let resp = resp.clone().expect("couldn't get Response");
         let status = resp.status();
         spawn_local(async move {
-            let body = JsFuture::from(
-                resp.text().expect("couldn't get .text() from Response"),
-            )
-            .await;
-            match body {
-                Ok(json) => {
-                    // 500 just returns text of error, not JSON
-                    if status == 500 {
-                        let err = ServerFnError::ServerError(
-                            json.as_string().unwrap_or_default(),
-                        );
+            let redirected = resp.redirected();
+
+            if !redirected {
+                let body = JsFuture::from(
+                    resp.text().expect("couldn't get .text() from Response"),
+                )
+                .await;
+                match body {
+                    Ok(json) => {
+                        // 500 just returns text of error, not JSON
+                        if status == 500 {
+                            let err = ServerFnError::ServerError(
+                                json.as_string().unwrap_or_default(),
+                            );
+                            if let Some(error) = error {
+                                error.try_set(Some(Box::new(err.clone())));
+                            }
+                            value.try_set(Some(Err(err)));
+                        } else {
+                            match O::de(
+                                &json.as_string().expect(
+                                    "couldn't get String from JsString",
+                                ),
+                            ) {
+                                Ok(res) => {
+                                    value.try_set(Some(Ok(res)));
+                                    if let Some(error) = error {
+                                        error.try_set(None);
+                                    }
+                                }
+                                Err(e) => {
+                                    value.try_set(Some(Err(
+                                        ServerFnError::Deserialization(
+                                            e.to_string(),
+                                        ),
+                                    )));
+                                    if let Some(error) = error {
+                                        error.try_set(Some(Box::new(e)));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        error!("{e:?}");
                         if let Some(error) = error {
-                            error.try_set(Some(Box::new(err.clone())));
-                        }
-                        value.try_set(Some(Err(err)));
-                    } else {
-                        match O::de(
-                            &json
-                                .as_string()
-                                .expect("couldn't get String from JsString"),
-                        ) {
-                            Ok(res) => {
-                                value.try_set(Some(Ok(res)));
-                                if let Some(error) = error {
-                                    error.try_set(None);
-                                }
-                            }
-                            Err(e) => {
-                                value.try_set(Some(Err(
-                                    ServerFnError::Deserialization(
-                                        e.to_string(),
-                                    ),
-                                )));
-                                if let Some(error) = error {
-                                    error.try_set(Some(Box::new(e)));
-                                }
-                            }
+                            error.try_set(Some(Box::new(
+                                ServerFnError::Request(
+                                    e.as_string().unwrap_or_default(),
+                                ),
+                            )));
                         }
                     }
-                }
-                Err(e) => {
-                    error!("{e:?}");
-                    if let Some(error) = error {
-                        error.try_set(Some(Box::new(ServerFnError::Request(
-                            e.as_string().unwrap_or_default(),
-                        ))));
-                    }
-                }
-            };
+                };
+            }
             input.try_set(None);
             action.set_pending(false);
         });
@@ -328,6 +348,10 @@ where
 /// Automatically turns a server [MultiAction](leptos_server::MultiAction) into an HTML
 /// [`form`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
 /// progressively enhanced to use client-side routing.
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    tracing::instrument(level = "trace", skip_all,)
+)]
 #[component]
 pub fn MultiActionForm<I, O>(
     cx: Scope,
@@ -408,7 +432,10 @@ where
     }
     form
 }
-
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    tracing::instrument(level = "trace", skip_all,)
+)]
 fn extract_form_attributes(
     ev: &web_sys::Event,
 ) -> (web_sys::HtmlFormElement, String, String, String) {
@@ -522,37 +549,40 @@ where
     Self: Sized + serde::de::DeserializeOwned,
 {
     /// Tries to deserialize the data, given only the `submit` event.
-    fn from_event(
-        ev: &web_sys::Event,
-    ) -> Result<Self, serde_urlencoded::de::Error>;
+    fn from_event(ev: &web_sys::Event) -> Result<Self, serde_qs::Error>;
 
     /// Tries to deserialize the data, given the actual form data.
     fn from_form_data(
         form_data: &web_sys::FormData,
-    ) -> Result<Self, serde_urlencoded::de::Error>;
+    ) -> Result<Self, serde_qs::Error>;
 }
 
 impl<T> FromFormData for T
 where
     T: serde::de::DeserializeOwned,
 {
-    fn from_event(
-        ev: &web_sys::Event,
-    ) -> Result<Self, serde_urlencoded::de::Error> {
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        tracing::instrument(level = "trace", skip_all,)
+    )]
+    fn from_event(ev: &web_sys::Event) -> Result<Self, serde_qs::Error> {
         let (form, _, _, _) = extract_form_attributes(ev);
 
         let form_data = web_sys::FormData::new_with_form(&form).unwrap_throw();
 
         Self::from_form_data(&form_data)
     }
-
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        tracing::instrument(level = "trace", skip_all,)
+    )]
     fn from_form_data(
         form_data: &web_sys::FormData,
-    ) -> Result<Self, serde_urlencoded::de::Error> {
+    ) -> Result<Self, serde_qs::Error> {
         let data =
             web_sys::UrlSearchParams::new_with_str_sequence_sequence(form_data)
                 .unwrap_throw();
         let data = data.to_string().as_string().unwrap_or_default();
-        serde_urlencoded::from_str::<Self>(&data)
+        serde_qs::from_str::<Self>(&data)
     }
 }

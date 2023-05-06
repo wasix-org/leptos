@@ -63,13 +63,25 @@ use std::{
 /// # }
 /// # }).dispose();
 /// ```
+#[cfg_attr(
+    any(debug_assertions, feature="ssr"),
+    instrument(
+        level = "info",
+        skip_all,
+        fields(
+            scope = ?cx.id,
+            ty = %std::any::type_name::<T>(),
+            signal_ty = %std::any::type_name::<S>(),
+        )
+    )
+)]
 pub fn create_resource<S, T, Fu>(
     cx: Scope,
     source: impl Fn() -> S + 'static,
     fetcher: impl Fn(S) -> Fu + 'static,
 ) -> Resource<S, T>
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: Serializable + 'static,
     Fu: Future<Output = T> + 'static,
 {
@@ -88,9 +100,9 @@ where
 /// serialized, or you just want to make sure the [`Future`] runs locally, use
 /// [`create_local_resource_with_initial_value()`].
 #[cfg_attr(
-    debug_assertions,
+    any(debug_assertions, feature="ssr"),
     instrument(
-        level = "trace",
+        level = "info",
         skip_all,
         fields(
             scope = ?cx.id,
@@ -107,7 +119,7 @@ pub fn create_resource_with_initial_value<S, T, Fu>(
     initial_value: Option<T>,
 ) -> Resource<S, T>
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: Serializable + 'static,
     Fu: Future<Output = T> + 'static,
 {
@@ -135,9 +147,9 @@ where
 /// **Note**: This is not “blocking” in the sense that it blocks the current thread. Rather,
 /// it is blocking in the sense that it blocks the server from sending a response.
 #[cfg_attr(
-    debug_assertions,
+    any(debug_assertions, feature="ssr"),
     instrument(
-        level = "trace",
+        level = "info",
         skip_all,
         fields(
             scope = ?cx.id,
@@ -153,7 +165,7 @@ pub fn create_blocking_resource<S, T, Fu>(
     fetcher: impl Fn(S) -> Fu + 'static,
 ) -> Resource<S, T>
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: Serializable + 'static,
     Fu: Future<Output = T> + 'static,
 {
@@ -174,7 +186,7 @@ fn create_resource_helper<S, T, Fu>(
     serializable: ResourceSerialization,
 ) -> Resource<S, T>
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: Serializable + 'static,
     Fu: Future<Output = T> + 'static,
 {
@@ -224,7 +236,7 @@ where
         id,
         source_ty: PhantomData,
         out_ty: PhantomData,
-        #[cfg(debug_assertions)]
+        #[cfg(any(debug_assertions, features = "ssr"))]
         defined_at: std::panic::Location::caller(),
     }
 }
@@ -260,13 +272,25 @@ where
 /// # }
 /// # }).dispose();
 /// ```
+#[cfg_attr(
+    any(debug_assertions, feature="ssr"),
+    instrument(
+        level = "info",
+        skip_all,
+        fields(
+            scope = ?cx.id,
+            ty = %std::any::type_name::<T>(),
+            signal_ty = %std::any::type_name::<S>(),
+        )
+    )
+)]
 pub fn create_local_resource<S, T, Fu>(
     cx: Scope,
     source: impl Fn() -> S + 'static,
     fetcher: impl Fn(S) -> Fu + 'static,
 ) -> Resource<S, T>
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: 'static,
     Fu: Future<Output = T> + 'static,
 {
@@ -282,9 +306,9 @@ where
 /// on the local system and therefore its output type does not need to be
 /// [`Serializable`].
 #[cfg_attr(
-    debug_assertions,
+    any(debug_assertions, feature="ssr"),
     instrument(
-        level = "trace",
+        level = "info",
         skip_all,
         fields(
             scope = ?cx.id,
@@ -300,7 +324,7 @@ pub fn create_local_resource_with_initial_value<S, T, Fu>(
     initial_value: Option<T>,
 ) -> Resource<S, T>
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: 'static,
     Fu: Future<Output = T> + 'static,
 {
@@ -348,7 +372,7 @@ where
         id,
         source_ty: PhantomData,
         out_ty: PhantomData,
-        #[cfg(debug_assertions)]
+        #[cfg(any(debug_assertions, features = "ssr"))]
         defined_at: std::panic::Location::caller(),
     }
 }
@@ -356,7 +380,7 @@ where
 #[cfg(not(feature = "hydrate"))]
 fn load_resource<S, T>(_cx: Scope, _id: ResourceId, r: Rc<ResourceState<S, T>>)
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: 'static,
 {
     SUPPRESS_RESOURCE_LOAD.with(|s| {
@@ -369,7 +393,7 @@ where
 #[cfg(feature = "hydrate")]
 fn load_resource<S, T>(cx: Scope, id: ResourceId, r: Rc<ResourceState<S, T>>)
 where
-    S: PartialEq + Debug + Clone + 'static,
+    S: PartialEq + Clone + 'static,
     T: Serializable + 'static,
 {
     use wasm_bindgen::{JsCast, UnwrapThrowExt};
@@ -447,6 +471,10 @@ where
     ///
     /// If you want to get the value without cloning it, use [`Resource::with`].
     /// (`value.read(cx)` is equivalent to `value.with(cx, T::clone)`.)
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "info", skip_all,)
+    )]
     #[track_caller]
     pub fn read(&self, cx: Scope) -> Option<T>
     where
@@ -469,6 +497,10 @@ where
     ///
     /// If you want to get the value by cloning it, you can use
     /// [`Resource::read`].
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "info", skip_all,)
+    )]
     #[track_caller]
     pub fn with<U>(&self, cx: Scope, f: impl FnOnce(&T) -> U) -> Option<U> {
         let location = std::panic::Location::caller();
@@ -482,6 +514,10 @@ where
     }
 
     /// Returns a signal that indicates whether the resource is currently loading.
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     pub fn loading(&self) -> ReadSignal<bool> {
         with_runtime(self.runtime, |runtime| {
             runtime.resource(self.id, |resource: &ResourceState<S, T>| {
@@ -495,6 +531,10 @@ where
     }
 
     /// Re-runs the async function with the current source data.
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     pub fn refetch(&self) {
         _ = with_runtime(self.runtime, |runtime| {
             runtime.resource(self.id, |resource: &ResourceState<S, T>| {
@@ -506,6 +546,10 @@ where
     /// Returns a [`Future`] that will resolve when the resource has loaded,
     /// yield its [`ResourceId`] and a JSON string.
     #[cfg(any(feature = "ssr", doc))]
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     pub async fn to_serialization_resolver(
         &self,
         cx: Scope,
@@ -674,7 +718,7 @@ where
     pub(crate) id: ResourceId,
     pub(crate) source_ty: PhantomData<S>,
     pub(crate) out_ty: PhantomData<T>,
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions, features = "ssr"))]
     pub(crate) defined_at: &'static std::panic::Location<'static>,
 }
 
@@ -689,13 +733,17 @@ where
     S: 'static,
     T: 'static,
 {
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     fn clone(&self) -> Self {
         Self {
             runtime: self.runtime,
             id: self.id,
             source_ty: PhantomData,
             out_ty: PhantomData,
-            #[cfg(debug_assertions)]
+            #[cfg(any(debug_assertions, features = "ssr"))]
             defined_at: self.defined_at,
         }
     }
@@ -745,6 +793,10 @@ where
     S: Clone + 'static,
     T: 'static,
 {
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "info", skip_all,)
+    )]
     #[track_caller]
     pub fn read(
         &self,
@@ -757,6 +809,10 @@ where
         self.with(cx, T::clone, location)
     }
 
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "info", skip_all,)
+    )]
     #[track_caller]
     pub fn with<U>(
         &self,
@@ -786,17 +842,23 @@ where
                 _ = location;
             }
             #[cfg(all(feature = "hydrate", debug_assertions))]
-            crate::macros::debug_warn!(
-                "At {location}, you are reading a resource in `hydrate` mode \
-                 outside a <Suspense/> or <Transition/>. This can cause \
-                 hydration mismatch errors and loses out on a significant \
-                 performance optimization. To fix this issue, you can either: \
-                 \n1. Wrap the place where you read the resource in a \
-                 <Suspense/> or <Transition/> component, or \n2. Switch to \
-                 using create_local_resource(), which will wait to load the \
-                 resource until the app is hydrated on the client side. (This \
-                 will have worse performance in most cases.)",
-            );
+            {
+                if self.serializable != ResourceSerialization::Local {
+                    crate::macros::debug_warn!(
+                        "At {location}, you are reading a resource in \
+                         `hydrate` mode outside a <Suspense/> or \
+                         <Transition/>. This can cause hydration mismatch \
+                         errors and loses out on a significant performance \
+                         optimization. To fix this issue, you can either: \
+                         \n1. Wrap the place where you read the resource in a \
+                         <Suspense/> or <Transition/> component, or \n2. \
+                         Switch to using create_local_resource(), which will \
+                         wait to load the resource until the app is hydrated \
+                         on the client side. (This will have worse \
+                         performance in most cases.)",
+                    );
+                }
+            }
         }
 
         let increment = move |_: Option<()>| {
@@ -825,11 +887,17 @@ where
         create_isomorphic_effect(cx, increment);
         v
     }
-
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     pub fn refetch(&self) {
         self.load(true);
     }
-
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     fn load(&self, refetching: bool) {
         // doesn't refetch if already refetching
         if refetching && self.scheduled.get() {
@@ -896,7 +964,10 @@ where
             })
         });
     }
-
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     pub fn resource_to_serialization_resolver(
         &self,
         cx: Scope,
@@ -957,7 +1028,10 @@ where
     fn as_any(&self) -> &dyn Any {
         self
     }
-
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     fn to_serialization_resolver(
         &self,
         cx: Scope,

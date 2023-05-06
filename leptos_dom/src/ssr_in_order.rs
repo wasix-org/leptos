@@ -19,6 +19,7 @@ use std::{borrow::Cow, collections::VecDeque};
 
 /// Renders a view to HTML, waiting to return until all `async` [Resource](leptos_reactive::Resource)s
 /// loaded in `<Suspense/>` elements have finished loading.
+#[tracing::instrument(level = "info", skip_all)]
 pub async fn render_to_string_async(
     view: impl FnOnce(Scope) -> View + 'static,
 ) -> String {
@@ -34,6 +35,7 @@ pub async fn render_to_string_async(
 /// in order:
 /// 1. HTML from the `view` in order, pausing to wait for each `<Suspense/>`
 /// 2. any serialized [Resource](leptos_reactive::Resource)s
+#[tracing::instrument(level = "info", skip_all)]
 pub fn render_to_stream_in_order(
     view: impl FnOnce(Scope) -> View + 'static,
 ) -> impl Stream<Item = String> {
@@ -48,10 +50,20 @@ pub fn render_to_stream_in_order(
 ///
 /// `additional_context` is injected before the `view` is rendered. The `prefix` is generated
 /// after the `view` is rendered, but before `<Suspense/>` nodes have resolved.
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn render_to_stream_in_order_with_prefix(
     view: impl FnOnce(Scope) -> View + 'static,
     prefix: impl FnOnce(Scope) -> Cow<'static, str> + 'static,
 ) -> impl Stream<Item = String> {
+    #[cfg(all(feature = "web", feature = "ssr"))]
+    crate::console_error(
+        "\n[DANGER] You have both `csr` and `ssr` or `hydrate` and `ssr` \
+         enabled as features, which may cause issues like <Suspense/>` \
+         failing to work silently. `csr` is enabled by default on `leptos`, \
+         and can be disabled by adding `default-features = false` to your \
+         `leptos` dependency.\n",
+    );
+
     let (stream, runtime, _) =
         render_to_stream_in_order_with_prefix_undisposed_with_context(
             view,
@@ -70,6 +82,7 @@ pub fn render_to_stream_in_order_with_prefix(
 ///
 /// `additional_context` is injected before the `view` is rendered. The `prefix` is generated
 /// after the `view` is rendered, but before `<Suspense/>` nodes have resolved.
+#[tracing::instrument(level = "trace", skip_all)]
 pub fn render_to_stream_in_order_with_prefix_undisposed_with_context(
     view: impl FnOnce(Scope) -> View + 'static,
     prefix: impl FnOnce(Scope) -> Cow<'static, str> + 'static,
@@ -144,6 +157,7 @@ pub fn render_to_stream_in_order_with_prefix_undisposed_with_context(
     (stream, runtime, scope_id)
 }
 
+#[tracing::instrument(level = "trace", skip_all)]
 #[async_recursion(?Send)]
 async fn handle_blocking_chunks(
     tx: UnboundedSender<String>,
@@ -184,6 +198,7 @@ async fn handle_blocking_chunks(
     queued_chunks
 }
 
+#[tracing::instrument(level = "trace", skip_all)]
 #[async_recursion(?Send)]
 async fn handle_chunks(
     tx: UnboundedSender<String>,
@@ -211,12 +226,13 @@ async fn handle_chunks(
 
 impl View {
     /// Renders the view into a set of HTML chunks that can be streamed.
+    #[tracing::instrument(level = "trace", skip_all)]
     pub fn into_stream_chunks(self, cx: Scope) -> VecDeque<StreamChunk> {
         let mut chunks = VecDeque::new();
         self.into_stream_chunks_helper(cx, &mut chunks, false);
         chunks
     }
-
+    #[tracing::instrument(level = "trace", skip_all)]
     fn into_stream_chunks_helper(
         self,
         cx: Scope,

@@ -1,8 +1,8 @@
 use cfg_if::cfg_if;
-use leptos::*;
 // boilerplate to run in different modes
 cfg_if! {
-if #[cfg(feature = "ssr")] {
+    if #[cfg(feature = "ssr")] {
+    use leptos::*;
     use axum::{
         routing::{post, get},
         extract::{Extension, Path},
@@ -32,7 +32,7 @@ if #[cfg(feature = "ssr")] {
     async fn main() {
         simple_logger::init_with_level(log::Level::Debug).expect("couldn't initialize logging");
 
-        let conn = db().await.expect("couldn't connect to DB");
+        let _conn = db().await.expect("couldn't connect to DB");
         /* sqlx::migrate!()
             .run(&mut conn)
             .await

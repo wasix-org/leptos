@@ -63,7 +63,7 @@ cfg_if! {
 use crate::{
     ev::EventDescriptor,
     hydration::HydrationCtx,
-    macro_helpers::{IntoAttribute, IntoClass, IntoProperty},
+    macro_helpers::{IntoAttribute, IntoClass, IntoProperty, IntoStyle},
     Element, Fragment, IntoView, NodeRef, Text, View,
 };
 use leptos_reactive::Scope;
@@ -824,6 +824,69 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
         }
     }
 
+    /// Sets a style on an element.
+    ///
+    /// **Note**: In the builder syntax, this will be overwritten by the `style`
+    /// attribute if you use `.attr("class", /* */)`. In the `view` macro, they
+    /// are automatically re-ordered so that this over-writing does not happen.
+    #[track_caller]
+    pub fn style(
+        self,
+        name: impl Into<Cow<'static, str>>,
+        style: impl IntoStyle,
+    ) -> Self {
+        let name = name.into();
+
+        #[cfg(all(target_arch = "wasm32", feature = "web"))]
+        {
+            let el = self.element.as_ref();
+            let value = style.into_style(self.cx);
+            style_helper(el, name, value);
+
+            self
+        }
+
+        #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
+        {
+            use crate::macro_helpers::Style;
+
+            let mut this = self;
+
+            let style = style.into_style(this.cx);
+
+            let include = match style {
+                Style::Value(value) => Some(value),
+                Style::Option(value) => value,
+                Style::Fn(_, f) => {
+                    let mut value = f();
+                    while let Style::Fn(_, f) = value {
+                        value = f();
+                    }
+                    match value {
+                        Style::Value(value) => Some(value),
+                        Style::Option(value) => value,
+                        _ => unreachable!(),
+                    }
+                }
+            };
+
+            if let Some(style_value) = include {
+                if let Some((_, ref mut value)) =
+                    this.attrs.iter_mut().find(|(name, _)| name == "style")
+                {
+                    *value = format!("{value} {name}: {style_value};").into();
+                } else {
+                    this.attrs.push((
+                        "style".into(),
+                        format!("{name}: {style_value};").into(),
+                    ));
+                }
+            }
+
+            this
+        }
+    }
+
     /// Sets a property on an element.
     #[track_caller]
     pub fn prop(
@@ -904,6 +967,40 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
         }
     }
 
+    /// Optionally adds an event listener to this element.
+    ///
+    /// ## Example
+    /// ```rust
+    /// # use leptos::*;
+    /// #[component]
+    /// pub fn Input(
+    ///     cx: Scope,
+    ///     #[prop(optional)] value: Option<RwSignal<String>>,
+    /// ) -> impl IntoView {
+    ///     view! { cx, <input/> }
+    ///         // only add event if `value` is `Some(signal)`
+    ///         .optional_event(
+    ///             ev::input,
+    ///             value.map(|value| move |ev| value.set(event_target_value(&ev))),
+    ///         )
+    /// }
+    /// #
+    /// ```
+    #[track_caller]
+    #[inline(always)]
+    pub fn optional_event<E: EventDescriptor + 'static>(
+        self,
+        event: E,
+        #[allow(unused_mut)] // used for tracing in debug
+        mut event_handler: Option<impl FnMut(E::EventType) + 'static>,
+    ) -> Self {
+        if let Some(event_handler) = event_handler {
+            self.on(event, event_handler)
+        } else {
+            self
+        }
+    }
+
     /// Adds a child to this element.
     #[track_caller]
     pub fn child(self, child: impl IntoView) -> Self {
@@ -977,7 +1074,7 @@ impl<El: ElementDescriptor + 'static> HtmlElement<El> {
 }
 
 impl<El: ElementDescriptor> IntoView for HtmlElement<El> {
-    #[cfg_attr(debug_assertions, instrument(level = "trace", name = "<HtmlElement />", skip_all, fields(tag = %self.element.name())))]
+    #[cfg_attr(any(debug_assertions, feature = "ssr"), instrument(level = "trace", name = "<HtmlElement />", skip_all, fields(tag = %self.element.name())))]
     #[cfg_attr(all(target_arch = "wasm32", feature = "web"), inline(always))]
     fn into_view(self, _: Scope) -> View {
         #[cfg(all(target_arch = "wasm32", feature = "web"))]
@@ -1021,7 +1118,7 @@ impl<El: ElementDescriptor> IntoView for HtmlElement<El> {
 
 impl<El: ElementDescriptor, const N: usize> IntoView for [HtmlElement<El>; N] {
     #[cfg_attr(
-        debug_assertions,
+        any(debug_assertions, feature = "ssr"),
         instrument(level = "trace", name = "[HtmlElement; N]", skip_all)
     )]
     fn into_view(self, cx: Scope) -> View {
@@ -1148,7 +1245,7 @@ macro_rules! generate_html_tags {
 
         #[$meta]
       #[cfg_attr(
-        debug_assertions,
+        any(debug_assertions, feature = "ssr"),
         instrument(
           level = "trace",
           name = "HtmlElement",

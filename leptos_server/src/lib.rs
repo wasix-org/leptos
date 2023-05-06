@@ -72,8 +72,9 @@
 //!   This should be fairly obvious: we have to serialize arguments to send them to the server, and we
 //!   need to deserialize the result to return it to the client.
 //! - **Arguments must be implement [serde::Serialize].** They are serialized as an `application/x-www-form-urlencoded`
-//!   form data using [`serde_urlencoded`](https://docs.rs/serde_urlencoded/latest/serde_urlencoded/) or as `application/cbor`
-//!   using [`cbor`](https://docs.rs/cbor/latest/cbor/).
+//!   form data using [`serde_qs`](https://docs.rs/serde_qs/latest/serde_qs/) or as `application/cbor`
+//!   using [`cbor`](https://docs.rs/cbor/latest/cbor/). **Note**: You should explicitly include `serde` with the
+//!   `derive` feature enabled in your `Cargo.toml`. You can do this by running `cargo add serde --features=derive`.
 //! - **The [Scope](leptos_reactive::Scope) comes from the server.** Optionally, the first argument of a server function
 //!   can be a Leptos [Scope](leptos_reactive::Scope). This scope can be used to inject dependencies like the HTTP request
 //!   or response or other server-only dependencies, but it does *not* have access to reactive state that exists in the client.
@@ -85,6 +86,8 @@ mod action;
 mod multi_action;
 pub use action::*;
 pub use multi_action::*;
+extern crate tracing;
+
 #[cfg(any(feature = "ssr", doc))]
 use std::{
     collections::HashMap,

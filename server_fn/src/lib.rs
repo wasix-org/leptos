@@ -75,7 +75,7 @@
 //!   This should be fairly obvious: we have to serialize arguments to send them to the server, and we
 //!   need to deserialize the result to return it to the client.
 //! - **Arguments must be implement [serde::Serialize].** They are serialized as an `application/x-www-form-urlencoded`
-//!   form data using [`serde_urlencoded`](https://docs.rs/serde_urlencoded/latest/serde_urlencoded/) or as `application/cbor`
+//!   form data using [`serde_qs`](https://docs.rs/serde_qs/latest/serde_qs/) or as `application/cbor`
 //!   using [`cbor`](https://docs.rs/cbor/latest/cbor/).
 
 // used by the macro
@@ -308,7 +308,7 @@ where
             // decode the args
             let value = match Self::encoding() {
                 Encoding::Url | Encoding::GetJSON | Encoding::GetCBOR => {
-                    serde_urlencoded::from_bytes(data).map_err(|e| {
+                    serde_qs::from_bytes(data).map_err(|e| {
                         ServerFnError::Deserialization(e.to_string())
                     })
                 }
@@ -376,7 +376,7 @@ pub enum ServerFnError {
     #[error("error deserializing server function results {0}")]
     Deserialization(String),
     /// Occurs on the client if there is an error serializing the server function arguments.
-    #[error("error serializing server function results {0}")]
+    #[error("error serializing server function arguments {0}")]
     Serialization(String),
     /// Occurs on the server if there is an error deserializing one of the arguments that's been sent.
     #[error("error deserializing server function arguments {0}")]
@@ -408,7 +408,7 @@ where
     }
     let args_encoded = match &enc {
         Encoding::Url | Encoding::GetJSON | Encoding::GetCBOR => Payload::Url(
-            serde_urlencoded::to_string(&args)
+            serde_qs::to_string(&args)
                 .map_err(|e| ServerFnError::Serialization(e.to_string()))?,
         ),
         Encoding::Cbor => {

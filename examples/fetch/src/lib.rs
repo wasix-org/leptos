@@ -14,7 +14,7 @@ pub enum FetchError {
     #[error("Error loading data from serving.")]
     Request,
     #[error("Error deserializaing cat data from request.")]
-    Json
+    Json,
 }
 
 async fn fetch_cats(count: u32) -> Result<Vec<String>, FetchError> {
@@ -55,7 +55,7 @@ pub fn fetch_example(cx: Scope) -> impl IntoView {
                 errors
                     .iter()
                     .map(|(_, e)| view! { cx, <li>{e.to_string()}</li> })
-                    .collect::<Vec<_>>()
+                    .collect_view(cx)
             })
         };
 
@@ -76,7 +76,7 @@ pub fn fetch_example(cx: Scope) -> impl IntoView {
             data.map(|data| {
                 data.iter()
                     .map(|s| view! { cx, <span>{s}</span> })
-                    .collect::<Vec<_>>()
+                    .collect_view(cx)
             })
         })
     };

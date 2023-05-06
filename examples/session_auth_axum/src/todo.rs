@@ -1,5 +1,4 @@
-use crate::auth::*;
-use crate::error_template::{ErrorTemplate, ErrorTemplateProps};
+use crate::{auth::*, error_template::ErrorTemplate};
 use cfg_if::cfg_if;
 use leptos::*;
 use leptos_meta::*;
@@ -21,15 +20,15 @@ if #[cfg(feature = "ssr")] {
     use sqlx::SqlitePool;
 
     pub fn pool(cx: Scope) -> Result<SqlitePool, ServerFnError> {
-        Ok(use_context::<SqlitePool>(cx)
+       use_context::<SqlitePool>(cx)
             .ok_or("Pool missing.")
-            .map_err(|e| ServerFnError::ServerError(e.to_string()))?)
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))
     }
 
     pub fn auth(cx: Scope) -> Result<AuthSession, ServerFnError> {
-        Ok(use_context::<AuthSession>(cx)
+        use_context::<AuthSession>(cx)
             .ok_or("Auth session missing.")
-            .map_err(|e| ServerFnError::ServerError(e.to_string()))?)
+            .map_err(|e| ServerFnError::ServerError(e.to_string()))
     }
 
     pub fn register_server_functions() {
@@ -73,7 +72,8 @@ pub async fn get_todos(cx: Scope) -> Result<Vec<Todo>, ServerFnError> {
     let pool = pool(cx)?;
 
     let mut todos = Vec::new();
-    let mut rows = sqlx::query_as::<_, SqlTodo>("SELECT * FROM todos").fetch(&pool);
+    let mut rows =
+        sqlx::query_as::<_, SqlTodo>("SELECT * FROM todos").fetch(&pool);
 
     while let Some(row) = rows
         .try_next()
@@ -111,11 +111,13 @@ pub async fn add_todo(cx: Scope, title: String) -> Result<(), ServerFnError> {
     // fake API delay
     std::thread::sleep(std::time::Duration::from_millis(1250));
 
-    match sqlx::query("INSERT INTO todos (title, user_id, completed) VALUES (?, ?, false)")
-        .bind(title)
-        .bind(id)
-        .execute(&pool)
-        .await
+    match sqlx::query(
+        "INSERT INTO todos (title, user_id, completed) VALUES (?, ?, false)",
+    )
+    .bind(title)
+    .bind(id)
+    .execute(&pool)
+    .await
     {
         Ok(_row) => Ok(()),
         Err(e) => Err(ServerFnError::ServerError(e.to_string())),
@@ -241,11 +243,11 @@ pub fn Todos(cx: Scope) -> impl IntoView {
                             todos.read(cx)
                                 .map(move |todos| match todos {
                                     Err(e) => {
-                                        vec![view! { cx, <pre class="error">"Server Error: " {e.to_string()}</pre>}.into_any()]
+                                        view! { cx, <pre class="error">"Server Error: " {e.to_string()}</pre>}.into_view(cx)
                                     }
                                     Ok(todos) => {
                                         if todos.is_empty() {
-                                            vec![view! { cx, <p>"No tasks were found."</p> }.into_any()]
+                                            view! { cx, <p>"No tasks were found."</p> }.into_view(cx)
                                         } else {
                                             todos
                                                 .into_iter()
@@ -266,9 +268,8 @@ pub fn Todos(cx: Scope) -> impl IntoView {
                                                             </ActionForm>
                                                         </li>
                                                     }
-                                                    .into_any()
                                                 })
-                                                .collect::<Vec<_>>()
+                                                .collect_view(cx)
                                         }
                                     }
                                 })
@@ -287,7 +288,7 @@ pub fn Todos(cx: Scope) -> impl IntoView {
                                 <li class="pending">{move || submission.input.get().map(|data| data.title) }</li>
                             }
                         })
-                        .collect::<Vec<_>>()
+                        .collect_view(cx)
                     };
 
                     view! {
@@ -305,7 +306,10 @@ pub fn Todos(cx: Scope) -> impl IntoView {
 }
 
 #[component]
-pub fn Login(cx: Scope, action: Action<Login, Result<(), ServerFnError>>) -> impl IntoView {
+pub fn Login(
+    cx: Scope,
+    action: Action<Login, Result<(), ServerFnError>>,
+) -> impl IntoView {
     view! {
         cx,
         <ActionForm action=action>
@@ -331,7 +335,10 @@ pub fn Login(cx: Scope, action: Action<Login, Result<(), ServerFnError>>) -> imp
 }
 
 #[component]
-pub fn Signup(cx: Scope, action: Action<Signup, Result<(), ServerFnError>>) -> impl IntoView {
+pub fn Signup(
+    cx: Scope,
+    action: Action<Signup, Result<(), ServerFnError>>,
+) -> impl IntoView {
     view! {
         cx,
         <ActionForm action=action>
@@ -363,7 +370,10 @@ pub fn Signup(cx: Scope, action: Action<Signup, Result<(), ServerFnError>>) -> i
 }
 
 #[component]
-pub fn Logout(cx: Scope, action: Action<Logout, Result<(), ServerFnError>>) -> impl IntoView {
+pub fn Logout(
+    cx: Scope,
+    action: Action<Logout, Result<(), ServerFnError>>,
+) -> impl IntoView {
     view! {
         cx,
         <div id="loginbox">

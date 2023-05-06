@@ -13,7 +13,7 @@ use actix_web::{
     web::Bytes,
     *,
 };
-use futures::{Future, Stream, StreamExt};
+use futures::{Stream, StreamExt};
 use http::StatusCode;
 use leptos::{
     leptos_dom::ssr::render_to_stream_with_prefix_undisposed_with_context,
@@ -26,8 +26,8 @@ use leptos_meta::*;
 use leptos_router::*;
 use parking_lot::RwLock;
 use regex::Regex;
-use std::sync::Arc;
-
+use std::{fmt::Display, future::Future, sync::Arc};
+use tracing::instrument;
 /// This struct lets you define headers and override the status of the Response from an Element or a Server Function
 /// Typically contained inside of a ResponseOptions. Setting this is useful for cookies and custom responses.
 #[derive(Debug, Clone, Default)]
@@ -98,6 +98,7 @@ impl ResponseOptions {
 /// Provides an easy way to redirect the user from within a server function. Mimicking the Remix `redirect()`,
 /// it sets a [StatusCode] of 302 and a [LOCATION](header::LOCATION) header with the provided value.
 /// If looking to redirect from the client, `leptos_router::use_navigate()` should be used instead.
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn redirect(cx: leptos::Scope, path: &str) {
     if let Some(response_options) = use_context::<ResponseOptions>(cx) {
         response_options.set_status(StatusCode::FOUND);
@@ -147,6 +148,7 @@ pub fn redirect(cx: leptos::Scope, path: &str) {
 /// This function always provides context values including the following types:
 /// - [ResponseOptions]
 /// - [HttpRequest](actix_web::HttpRequest)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn handle_server_fns() -> Route {
     handle_server_fns_with_context(|_cx| {})
 }
@@ -166,6 +168,7 @@ pub fn handle_server_fns() -> Route {
 /// This function always provides context values including the following types:
 /// - [ResponseOptions]
 /// - [HttpRequest](actix_web::HttpRequest)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn handle_server_fns_with_context(
     additional_context: impl Fn(leptos::Scope) + 'static + Clone + Send,
 ) -> Route {
@@ -339,6 +342,7 @@ pub fn handle_server_fns_with_context(
 /// - [HttpRequest](actix_web::HttpRequest)
 /// - [MetaContext](leptos_meta::MetaContext)
 /// - [RouterIntegrationContext](leptos_router::RouterIntegrationContext)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn render_app_to_stream<IV>(
     options: LeptosOptions,
     app_fn: impl Fn(leptos::Scope) -> IV + Clone + 'static,
@@ -407,6 +411,7 @@ where
 /// - [HttpRequest](actix_web::HttpRequest)
 /// - [MetaContext](leptos_meta::MetaContext)
 /// - [RouterIntegrationContext](leptos_router::RouterIntegrationContext)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn render_app_to_stream_in_order<IV>(
     options: LeptosOptions,
     app_fn: impl Fn(leptos::Scope) -> IV + Clone + 'static,
@@ -478,6 +483,7 @@ where
 /// - [HttpRequest](actix_web::HttpRequest)
 /// - [MetaContext](leptos_meta::MetaContext)
 /// - [RouterIntegrationContext](leptos_router::RouterIntegrationContext)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn render_app_async<IV>(
     options: LeptosOptions,
     app_fn: impl Fn(leptos::Scope) -> IV + Clone + 'static,
@@ -501,6 +507,7 @@ where
 /// - [HttpRequest](actix_web::HttpRequest)
 /// - [MetaContext](leptos_meta::MetaContext)
 /// - [RouterIntegrationContext](leptos_router::RouterIntegrationContext)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn render_app_to_stream_with_context<IV>(
     options: LeptosOptions,
     additional_context: impl Fn(leptos::Scope) + 'static + Clone + Send,
@@ -550,6 +557,7 @@ where
 /// - [HttpRequest](actix_web::HttpRequest)
 /// - [MetaContext](leptos_meta::MetaContext)
 /// - [RouterIntegrationContext](leptos_router::RouterIntegrationContext)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn render_app_to_stream_in_order_with_context<IV>(
     options: LeptosOptions,
     additional_context: impl Fn(leptos::Scope) + 'static + Clone + Send,
@@ -601,6 +609,7 @@ where
 /// - [HttpRequest](actix_web::HttpRequest)
 /// - [MetaContext](leptos_meta::MetaContext)
 /// - [RouterIntegrationContext](leptos_router::RouterIntegrationContext)
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 pub fn render_app_async_with_context<IV>(
     options: LeptosOptions,
     additional_context: impl Fn(leptos::Scope) + 'static + Clone + Send,
@@ -741,7 +750,7 @@ where
         }
     })
 }
-
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 fn provide_contexts(
     cx: leptos::Scope,
     req: &HttpRequest,
@@ -766,7 +775,7 @@ fn leptos_corrected_path(req: &HttpRequest) -> String {
         "http://leptos".to_string() + path + "?" + query
     }
 }
-
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 async fn stream_app(
     options: &LeptosOptions,
     app: impl FnOnce(leptos::Scope) -> View + 'static,
@@ -782,7 +791,10 @@ async fn stream_app(
 
     build_stream_response(options, res_options, stream, runtime, scope).await
 }
-
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    instrument(level = "trace", skip_all,)
+)]
 async fn stream_app_in_order(
     options: &LeptosOptions,
     app: impl FnOnce(leptos::Scope) -> View + 'static,
@@ -800,7 +812,7 @@ async fn stream_app_in_order(
 
     build_stream_response(options, res_options, stream, runtime, scope).await
 }
-
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 async fn build_stream_response(
     options: &LeptosOptions,
     res_options: ResponseOptions,
@@ -850,7 +862,7 @@ async fn build_stream_response(
     // Return the response
     res
 }
-
+#[tracing::instrument(level = "trace", fields(error), skip_all)]
 async fn render_app_async_helper(
     options: &LeptosOptions,
     app: impl FnOnce(leptos::Scope) -> View + 'static,
@@ -896,6 +908,20 @@ pub fn generate_route_list<IV>(
 where
     IV: IntoView + 'static,
 {
+    generate_route_list_with_exclusions(app_fn, None)
+}
+
+/// Generates a list of all routes defined in Leptos's Router in your app. We can then use this to automatically
+/// create routes in Actix's App without having to use wildcard matching or fallbacks. Takes in your root app Element
+/// as an argument so it can walk you app tree. This version is tailored to generated Actix compatible paths. Adding excluded_routes
+/// to this function will stop `.leptos_routes()` from generating a route for it, allowing a custom handler. These need to be in Actix path format
+pub fn generate_route_list_with_exclusions<IV>(
+    app_fn: impl FnOnce(leptos::Scope) -> IV + 'static,
+    excluded_routes: Option<Vec<String>>,
+) -> Vec<RouteListing>
+where
+    IV: IntoView + 'static,
+{
     let mut routes = leptos_router::generate_route_list_inner(app_fn);
 
     // Empty strings screw with Actix pathing, they need to be "/"
@@ -920,7 +946,7 @@ where
     // Match `:some_word` but only capture `some_word` in the groups to replace with `{some_word}`
     let capture_re = Regex::new(r":((?:[^.,/]+)+)[^/]?").unwrap();
 
-    let routes = routes
+    let mut routes = routes
         .into_iter()
         .map(|listing| {
             let path = wildcard_re
@@ -934,6 +960,10 @@ where
     if routes.is_empty() {
         vec![RouteListing::new("/", Default::default(), [Method::Get])]
     } else {
+        // Routes to exclude from auto generation
+        if let Some(excluded_routes) = excluded_routes {
+            routes.retain(|p| !excluded_routes.iter().any(|e| e == p.path()))
+        }
         routes
     }
 }
@@ -993,6 +1023,7 @@ where
         InitError = (),
     >,
 {
+    #[tracing::instrument(level = "trace", fields(error), skip_all)]
     fn leptos_routes<IV>(
         self,
         options: LeptosOptions,
@@ -1004,7 +1035,7 @@ where
     {
         self.leptos_routes_with_context(options, paths, |_| {}, app_fn)
     }
-
+    #[tracing::instrument(level = "trace", fields(error), skip_all)]
     fn leptos_preloaded_data_routes<Data, Fut, IV>(
         self,
         options: LeptosOptions,
@@ -1032,7 +1063,7 @@ where
         }
         router
     }
-
+    #[tracing::instrument(level = "trace", fields(error), skip_all)]
     fn leptos_routes_with_context<IV>(
         self,
         options: LeptosOptions,
@@ -1081,3 +1112,94 @@ where
         router
     }
 }
+
+/// A helper to make it easier to use Axum extractors in server functions. This takes
+/// a handler function as its argument. The handler follows similar rules to an Actix
+/// [Handler](actix_web::Handler): it is an async function that receives arguments that  
+/// will be extracted from the request and returns some value.
+///
+/// ```rust,ignore
+/// use leptos::*;
+/// use serde::Deserialize;
+/// #[derive(Deserialize)]
+/// struct Search {
+///     q: String,
+/// }
+///
+/// #[server(ExtractoServerFn, "/api")]
+/// pub async fn extractor_server_fn(cx: Scope) -> Result<String, ServerFnError> {
+///     use actix_web::dev::ConnectionInfo;
+///     use actix_web::web::{Data, Query};
+///
+///     extract(
+///         cx,
+///         |data: Data<String>, search: Query<Search>, connection: ConnectionInfo| async move {
+///             format!(
+///                 "data = {}\nsearch = {}\nconnection = {:?}",
+///                 data.into_inner(),
+///                 search.q,
+///                 connection
+///             )
+///         },
+///     )
+///     .await
+/// }
+/// ```
+pub async fn extract<F, E>(
+    cx: leptos::Scope,
+    f: F,
+) -> Result<<<F as Extractor<E>>::Future as Future>::Output, ServerFnError>
+where
+    F: Extractor<E>,
+    E: actix_web::FromRequest,
+    <E as actix_web::FromRequest>::Error: Display,
+    <F as Extractor<E>>::Future: Future,
+{
+    let req = use_context::<actix_web::HttpRequest>(cx)
+        .expect("HttpRequest should have been provided via context");
+    let input = E::extract(&req)
+        .await
+        .map_err(|e| ServerFnError::ServerError(e.to_string()))?;
+    Ok(f.call(input).await)
+}
+
+// Drawn from the Actix Handler implementation
+// https://github.com/actix/actix-web/blob/19c9d858f25e8262e14546f430d713addb397e96/actix-web/src/handler.rs#L124
+pub trait Extractor<T> {
+    type Future;
+
+    fn call(&self, args: T) -> Self::Future;
+}
+macro_rules! factory_tuple ({ $($param:ident)* } => {
+    impl<Func, Fut, $($param,)*> Extractor<($($param,)*)> for Func
+    where
+        Func: Fn($($param),*) -> Fut + Clone + 'static,
+        Fut: Future,
+    {
+        type Future = Fut;
+
+        #[inline]
+        #[allow(non_snake_case)]
+        fn call(&self, ($($param,)*): ($($param,)*)) -> Self::Future {
+            (self)($($param,)*)
+        }
+    }
+});
+
+factory_tuple! {}
+factory_tuple! { A }
+factory_tuple! { A B }
+factory_tuple! { A B C }
+factory_tuple! { A B C D }
+factory_tuple! { A B C D E }
+factory_tuple! { A B C D E F }
+factory_tuple! { A B C D E F G }
+factory_tuple! { A B C D E F G H }
+factory_tuple! { A B C D E F G H I }
+factory_tuple! { A B C D E F G H I J }
+factory_tuple! { A B C D E F G H I J K }
+factory_tuple! { A B C D E F G H I J K L }
+factory_tuple! { A B C D E F G H I J K L M }
+factory_tuple! { A B C D E F G H I J K L M N }
+factory_tuple! { A B C D E F G H I J K L M N O }
+factory_tuple! { A B C D E F G H I J K L M N O P }

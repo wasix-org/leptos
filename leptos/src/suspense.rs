@@ -1,7 +1,11 @@
 use cfg_if::cfg_if;
 use leptos_dom::{DynChild, Fragment, HydrationCtx, IntoView};
 use leptos_macro::component;
+#[cfg(any(feature = "csr", feature = "hydrate"))]
+use leptos_reactive::ScopeDisposer;
 use leptos_reactive::{provide_context, Scope, SuspenseContext};
+#[cfg(any(feature = "csr", feature = "hydrate"))]
+use std::cell::RefCell;
 use std::rc::Rc;
 
 /// If any [Resources](leptos_reactive::Resource) are read in the `children` of this
@@ -29,18 +33,15 @@ use std::rc::Rc;
 ///     <Suspense fallback=move || view! { cx, <p>"Loading (Suspense Fallback)..."</p> }>
 ///       {move || {
 ///           cats.read(cx).map(|data| match data {
-///             None => view! { cx,  <pre>"Error"</pre> }.into_any(),
-///             Some(cats) => view! { cx,
-///               <div>{
-///                 cats.iter()
-///                   .map(|src| {
+///             None => view! { cx,  <pre>"Error"</pre> }.into_view(cx),
+///             Some(cats) => cats
+///                 .iter()
+///                 .map(|src| {
 ///                     view! { cx,
 ///                       <img src={src}/>
 ///                     }
-///                   })
-///                   .collect::<Vec<_>>()
-///               }</div>
-///             }.into_any(),
+///                 })
+///                 .collect_view(cx),
 ///           })
 ///         }
 ///       }
@@ -50,6 +51,10 @@ use std::rc::Rc;
 /// # });
 /// # }
 /// ```
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    tracing::instrument(level = "info", skip_all)
+)]
 #[component(transparent)]
 pub fn Suspense<F, E>(
     cx: Scope,
@@ -71,6 +76,8 @@ where
 
     let before_me = HydrationCtx::peek();
     let current_id = HydrationCtx::next_component();
+    #[cfg(any(feature = "csr", feature = "hydrate"))]
+    let prev_disposer = Rc::new(RefCell::new(None::<ScopeDisposer>));
 
     let child = DynChild::new({
         #[cfg(not(any(feature = "csr", feature = "hydrate")))]
@@ -78,11 +85,18 @@ where
         move || {
             cfg_if! {
                 if #[cfg(any(feature = "csr", feature = "hydrate"))] {
-                    if context.ready() {
+                    if let Some(disposer) = prev_disposer.take() {
+                        disposer.dispose();
+                    }
+                    let (view, disposer) =
+                        cx.run_child_scope(|cx| if context.ready() {
                         Fragment::lazy(Box::new(|| vec![orig_child(cx).into_view(cx)])).into_view(cx)
                     } else {
                         Fragment::lazy(Box::new(|| vec![fallback().into_view(cx)])).into_view(cx)
-                    }
+                    });
+                    *prev_disposer.borrow_mut() = Some(disposer);
+                    view
+
                 } else {
                     use leptos_reactive::signal_prelude::*;
 

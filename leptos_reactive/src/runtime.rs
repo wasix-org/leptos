@@ -372,6 +372,10 @@ impl Debug for Runtime {
 }
 /// Get the selected runtime from the thread-local set of runtimes. On the server,
 /// this will return the correct runtime. In the browser, there should only be one runtime.
+#[cfg_attr(
+    any(debug_assertions, feature = "ssr"),
+    instrument(level = "trace", skip_all,)
+)]
 #[inline(always)] // it monomorphizes anyway
 pub(crate) fn with_runtime<T>(
     id: RuntimeId,
@@ -534,14 +538,14 @@ impl RuntimeId {
                 runtime: self,
                 id,
                 ty: PhantomData,
-                #[cfg(debug_assertions)]
+                #[cfg(any(debug_assertions, feature = "ssr"))]
                 defined_at: std::panic::Location::caller(),
             },
             WriteSignal {
                 runtime: self,
                 id,
                 ty: PhantomData,
-                #[cfg(debug_assertions)]
+                #[cfg(any(debug_assertions, feature = "ssr"))]
                 defined_at: std::panic::Location::caller(),
             },
         )
@@ -585,14 +589,14 @@ impl RuntimeId {
                             runtime: self,
                             id,
                             ty: PhantomData,
-                            #[cfg(debug_assertions)]
+                            #[cfg(any(debug_assertions, feature = "ssr"))]
                             defined_at: std::panic::Location::caller(),
                         },
                         WriteSignal {
                             runtime: self,
                             id,
                             ty: PhantomData,
-                            #[cfg(debug_assertions)]
+                            #[cfg(any(debug_assertions, feature = "ssr"))]
                             defined_at: std::panic::Location::caller(),
                         },
                     )
@@ -620,7 +624,7 @@ impl RuntimeId {
             runtime: self,
             id,
             ty: PhantomData,
-            #[cfg(debug_assertions)]
+            #[cfg(any(debug_assertions, feature = "ssr"))]
             defined_at: std::panic::Location::caller(),
         }
     }
@@ -685,7 +689,7 @@ impl RuntimeId {
             Rc::new(Effect {
                 f,
                 ty: PhantomData,
-                #[cfg(debug_assertions)]
+                #[cfg(any(debug_assertions, feature = "ssr"))]
                 defined_at: std::panic::Location::caller(),
             }),
         )
@@ -707,12 +711,12 @@ impl RuntimeId {
                 Rc::new(MemoState {
                     f,
                     t: PhantomData,
-                    #[cfg(debug_assertions)]
+                    #[cfg(any(debug_assertions, feature = "ssr"))]
                     defined_at: std::panic::Location::caller(),
                 }),
             ),
             ty: PhantomData,
-            #[cfg(debug_assertions)]
+            #[cfg(any(debug_assertions, feature = "ssr"))]
             defined_at: std::panic::Location::caller(),
         }
     }
@@ -740,7 +744,10 @@ impl Runtime {
             .borrow_mut()
             .insert(AnyResource::Serializable(state))
     }
-
+    #[cfg_attr(
+        any(debug_assertions, feature = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
     pub(crate) fn resource<S, T, U>(
         &self,
         id: ResourceId,
