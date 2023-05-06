@@ -48,7 +48,6 @@ pub(crate) struct Runtime {
     pub observer: Cell<Option<NodeId>>,
     pub scopes: RefCell<SlotMap<ScopeId, RefCell<Vec<ScopeProperty>>>>,
     pub scope_parents: RefCell<SparseSecondaryMap<ScopeId, ScopeId>>,
-    pub scope_children: RefCell<SparseSecondaryMap<ScopeId, Vec<ScopeId>>>,
     #[allow(clippy::type_complexity)]
     pub scope_contexts:
         RefCell<SparseSecondaryMap<ScopeId, FxHashMap<TypeId, Box<dyn Any>>>>,
@@ -361,13 +360,7 @@ impl Runtime {
 
 impl Debug for Runtime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Runtime")
-            .field("shared_context", &self.shared_context)
-            .field("observer", &self.observer)
-            .field("scopes", &self.scopes)
-            .field("scope_parents", &self.scope_parents)
-            .field("scope_children", &self.scope_children)
-            .finish()
+        f.debug_struct("Runtime").finish()
     }
 }
 /// Get the selected runtime from the thread-local set of runtimes. On the server,

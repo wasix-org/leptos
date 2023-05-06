@@ -296,8 +296,10 @@ impl Scope {
                                 .borrow_mut()
                                 .remove(id);
 
-                            // drop any of its cleanups
-                            cleanups.remove(id);
+                            // run any of its cleanups
+                            for cleanup in cleanups.remove(id).into_iter().flatten() {
+                                cleanup();
+                            }
 
                             // each of the subs needs to remove the signal from its dependencies
                             // so that it doesn't try to read the (now disposed) signal
@@ -313,7 +315,9 @@ impl Scope {
                             }
                         }
                         ScopeProperty::Effect(id) => {
-                            cleanups.remove(id);
+                            for cleanup in cleanups.remove(id).into_iter().flatten() {
+                                cleanup();
+                            }
                             nodes.remove(id);
                             runtime.node_sources.borrow_mut().remove(id);
                         }
