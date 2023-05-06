@@ -58,6 +58,9 @@ pub(crate) struct Runtime {
         RefCell<SecondaryMap<NodeId, RefCell<FxIndexSet<NodeId>>>>,
     pub node_sources:
         RefCell<SecondaryMap<NodeId, RefCell<FxIndexSet<NodeId>>>>,
+    pub node_owners: RefCell<SecondaryMap<NodeId, NodeId>>,
+    pub node_properties:
+        RefCell<SparseSecondaryMap<NodeId, Vec<ScopeProperty>>>,
     #[allow(clippy::type_complexity)]
     pub contexts:
         RefCell<SparseSecondaryMap<NodeId, FxHashMap<TypeId, Box<dyn Any>>>>,
@@ -99,7 +102,7 @@ impl Runtime {
 
         // if we're dirty at this point, update
         if self.current_state(node_id) >= ReactiveNodeState::Dirty {
-            // first, run our cleanups, if any 
+            // first, run our cleanups, if any
             if let Some(cleanups) =
                 self.on_cleanups.borrow_mut().remove(node_id)
             {
@@ -108,7 +111,7 @@ impl Runtime {
                 }
             }
 
-            // now, update the value 
+            // now, update the value
             self.update(node_id);
         }
 
@@ -356,6 +359,57 @@ impl Runtime {
         self.node_sources.borrow_mut().remove(node);
         self.node_subscribers.borrow_mut().remove(node);
         self.nodes.borrow_mut().remove(node);
+    }
+
+    #[track_caller]
+    pub(crate) fn register_property(
+        &self,
+        property: ScopeProperty,
+        #[cfg(debug_assertions)] defined_at: &'static std::panic::Location<
+            'static,
+        >,
+    ) {
+        let mut properties = self.node_properties.borrow_mut();
+        if let Some(owner) = self.owner.get() {
+            if let Some(entry) = properties.entry(owner) {
+                let entry = entry.or_default();
+                entry.push(property);
+            }
+
+            if let Some(node) = property.to_node_id() {
+                let mut owners = self.node_owners.borrow_mut();
+                owners.insert(node, owner);
+            }
+        } else {
+            crate::macros::debug_warn!(
+                "At {defined_at}, you are creating a reactive value outside \
+                 the reactive root.",
+            );
+        }
+    }
+
+    pub(crate) fn get_context<T: Clone + 'static>(
+        &self,
+        node: NodeId,
+        ty: TypeId,
+    ) -> Option<T> {
+        let contexts = self.contexts.borrow();
+
+        let context = contexts.get(node);
+        let local_value = context.and_then(|context| {
+            context
+                .get(&ty)
+                .and_then(|val| val.downcast_ref::<T>())
+                .cloned()
+        });
+        match local_value {
+            Some(val) => Some(val),
+            None => self
+                .node_owners
+                .borrow()
+                .get(node)
+                .and_then(|parent| self.get_context(*parent, ty)),
+        }
     }
 }
 
@@ -637,21 +691,11 @@ impl RuntimeId {
         with_runtime(self, |runtime| {
             let id = runtime.nodes.borrow_mut().insert(ReactiveNode {
                 value: Some(Rc::clone(&value)),
-                state: ReactiveNodeState::Clean,
+                state: ReactiveNodeState::Dirty,
                 node_type: ReactiveNodeType::Effect {
                     f: Rc::clone(&effect),
                 },
             });
-
-            // run the effect for the first time
-            let prev_observer = runtime.observer.take();
-            runtime.owner.set(Some(id));
-            runtime.observer.set(Some(id));
-
-            effect.run(value);
-
-            runtime.observer.set(prev_observer);
-            runtime.owner.set(prev_observer);
 
             id
         })

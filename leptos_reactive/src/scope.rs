@@ -297,7 +297,9 @@ impl Scope {
                                 .remove(id);
 
                             // run any of its cleanups
-                            for cleanup in cleanups.remove(id).into_iter().flatten() {
+                            for cleanup in
+                                cleanups.remove(id).into_iter().flatten()
+                            {
                                 cleanup();
                             }
 
@@ -315,7 +317,9 @@ impl Scope {
                             }
                         }
                         ScopeProperty::Effect(id) => {
-                            for cleanup in cleanups.remove(id).into_iter().flatten() {
+                            for cleanup in
+                                cleanups.remove(id).into_iter().flatten()
+                            {
                                 cleanup();
                             }
                             nodes.remove(id);
@@ -336,8 +340,17 @@ impl Scope {
         any(debug_assertions, features = "ssr"),
         instrument(level = "trace", skip_all,)
     )]
+    #[track_caller]
     pub(crate) fn push_scope_property(&self, prop: ScopeProperty) {
+        #[cfg(debug_assertions)]
+        let defined_at = std::panic::Location::caller();
         _ = with_runtime(self.runtime, |runtime| {
+            runtime.register_property(
+                prop,
+                #[cfg(debug_assertions)]
+                defined_at,
+            );
+
             let scopes = runtime.scopes.borrow();
             if let Some(scope) = scopes.get(self.id) {
                 scope.borrow_mut().push(prop);
@@ -370,10 +383,7 @@ impl Scope {
     any(debug_assertions, features = "ssr"),
     instrument(level = "trace", skip_all,)
 )]
-fn push_cleanup(
-    cx: Scope,
-    cleanup_fn: Box<dyn FnOnce()>,
-) {
+fn push_cleanup(cx: Scope, cleanup_fn: Box<dyn FnOnce()>) {
     _ = with_runtime(cx.runtime, |runtime| {
         if let Some(owner) = runtime.owner.get() {
             let mut cleanups = runtime.on_cleanups.borrow_mut();
@@ -400,13 +410,24 @@ slotmap::new_key_type! {
     pub struct ScopeId;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum ScopeProperty {
     Trigger(NodeId),
     Signal(NodeId),
     Effect(NodeId),
     Resource(ResourceId),
     StoredValue(StoredValueId),
+}
+
+impl ScopeProperty {
+    pub fn to_node_id(self) -> Option<NodeId> {
+        match self {
+            Self::Trigger(node) | Self::Signal(node) | Self::Effect(node) => {
+                Some(node)
+            }
+            _ => None,
+        }
+    }
 }
 
 /// Creating a [`Scope`](crate::Scope) gives you a disposer, which can be called

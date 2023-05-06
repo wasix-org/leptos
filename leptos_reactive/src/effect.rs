@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-use crate::{Scope, ScopeProperty};
+use crate::{with_runtime, Scope, ScopeProperty};
 use cfg_if::cfg_if;
 use std::{any::Any, cell::RefCell, marker::PhantomData, rc::Rc};
 
@@ -66,7 +66,6 @@ where
     cfg_if! {
         if #[cfg(not(feature = "ssr"))] {
             let e = cx.runtime.create_effect(f);
-            //eprintln!("created effect {e:?}");
             cx.push_scope_property(ScopeProperty::Effect(e))
         } else {
             // clear warnings
@@ -122,8 +121,36 @@ pub fn create_isomorphic_effect<T>(
     T: 'static,
 {
     let e = cx.runtime.create_effect(f);
-    //eprintln!("created effect {e:?}");
-    cx.push_scope_property(ScopeProperty::Effect(e))
+    cx.push_scope_property(ScopeProperty::Effect(e));
+    with_runtime(cx.runtime, |runtime| {
+        runtime.update_if_necessary(e);
+    });
+}
+
+/// Create a reactive root.
+///
+/// TODO docs
+#[cfg_attr(
+    any(debug_assertions, feature="ssr"),
+    instrument(
+        level = "trace",
+        skip_all,
+        fields(
+            scope = ?cx.id,
+            ty = %std::any::type_name::<T>()
+        )
+    )
+)]
+#[track_caller]
+#[inline(always)]
+pub fn create_root<T>(cx: Scope, f: impl Fn(Option<T>) -> T + 'static)
+where
+    T: 'static,
+{
+    let e = cx.runtime.create_effect(f);
+    with_runtime(cx.runtime, |runtime| {
+        runtime.update_if_necessary(e);
+    });
 }
 
 #[doc(hidden)]

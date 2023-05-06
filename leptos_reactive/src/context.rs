@@ -51,6 +51,7 @@ use std::any::{Any, TypeId};
     any(debug_assertions, feature = "ssr"),
     instrument(level = "info", skip_all,)
 )]
+#[track_caller]
 pub fn provide_context<T>(cx: Scope, value: T)
 where
     T: Clone + 'static,
@@ -58,9 +59,22 @@ where
     let id = value.type_id();
 
     _ = with_runtime(cx.runtime, |runtime| {
-        let mut contexts = runtime.scope_contexts.borrow_mut();
-        let context = contexts.entry(cx.id).unwrap().or_default();
-        context.insert(id, Box::new(value) as Box<dyn Any>);
+        let mut contexts = runtime.contexts.borrow_mut();
+        let owner = runtime.owner.get();
+        if let Some(owner) = owner {
+            eprintln!(
+                "providing context {:?} on {owner:?}",
+                std::any::type_name::<T>()
+            );
+            let context = contexts.entry(owner).unwrap().or_default();
+            context.insert(id, Box::new(value) as Box<dyn Any>);
+        } else {
+            crate::macros::debug_warn!(
+                "At {}, you are calling provide_context() outside the \
+                 reactive system.",
+                std::panic::Location::caller()
+            );
+        }
     });
 }
 
@@ -118,31 +132,18 @@ pub fn use_context<T>(cx: Scope) -> Option<T>
 where
     T: Clone + 'static,
 {
-    let id = TypeId::of::<T>();
+    let ty = TypeId::of::<T>();
     with_runtime(cx.runtime, |runtime| {
-        let local_value = {
-            let contexts = runtime.scope_contexts.borrow();
-            let context = contexts.get(cx.id);
-            context
-                .and_then(|context| {
-                    context.get(&id).and_then(|val| val.downcast_ref::<T>())
-                })
-                .cloned()
-        };
-        match local_value {
-            Some(val) => Some(val),
-            None => {
-                runtime
-                    .scope_parents
-                    .borrow()
-                    .get(cx.id)
-                    .and_then(|parent| {
-                        use_context::<T>(Scope {
-                            runtime: cx.runtime,
-                            id: *parent,
-                        })
-                    })
-            }
+        let owner = runtime.owner.get();
+        if let Some(owner) = owner {
+            runtime.get_context(owner, ty)
+        } else {
+            crate::macros::debug_warn!(
+                "At {}, you are calling use_context() outside the reactive \
+                 system.",
+                std::panic::Location::caller()
+            );
+            None
         }
     })
     .ok()
