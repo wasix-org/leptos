@@ -48,9 +48,7 @@ pub(crate) struct Runtime {
     pub observer: Cell<Option<NodeId>>,
     pub scopes: RefCell<SlotMap<ScopeId, RefCell<Vec<ScopeProperty>>>>,
     pub scope_parents: RefCell<SparseSecondaryMap<ScopeId, ScopeId>>,
-    #[allow(clippy::type_complexity)]
-    pub scope_contexts:
-        RefCell<SparseSecondaryMap<ScopeId, FxHashMap<TypeId, Box<dyn Any>>>>,
+    pub scope_children: RefCell<SparseSecondaryMap<ScopeId, Vec<ScopeId>>>,
     #[allow(clippy::type_complexity)]
     pub on_cleanups:
         RefCell<SparseSecondaryMap<NodeId, Vec<Box<dyn FnOnce()>>>>,
@@ -60,6 +58,9 @@ pub(crate) struct Runtime {
         RefCell<SecondaryMap<NodeId, RefCell<FxIndexSet<NodeId>>>>,
     pub node_sources:
         RefCell<SecondaryMap<NodeId, RefCell<FxIndexSet<NodeId>>>>,
+    #[allow(clippy::type_complexity)]
+    pub contexts:
+        RefCell<SparseSecondaryMap<NodeId, FxHashMap<TypeId, Box<dyn Any>>>>,
     pub pending_effects: RefCell<Vec<NodeId>>,
     pub resources: RefCell<SlotMap<ResourceId, AnyResource>>,
     pub batching: Cell<bool>,
@@ -360,7 +361,13 @@ impl Runtime {
 
 impl Debug for Runtime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Runtime").finish()
+        f.debug_struct("Runtime")
+            .field("shared_context", &self.shared_context)
+            .field("observer", &self.observer)
+            .field("scopes", &self.scopes)
+            .field("scope_parents", &self.scope_parents)
+            .field("scope_children", &self.scope_children)
+            .finish()
     }
 }
 /// Get the selected runtime from the thread-local set of runtimes. On the server,
