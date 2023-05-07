@@ -831,7 +831,7 @@ pub enum MountKind<'a> {
 /// Runs the provided closure and mounts the result to the `<body>`.
 pub fn mount_to_body<F, N>(f: F)
 where
-    F: FnOnce(Scope) -> N + 'static,
+    F: Fn(Scope) -> N + 'static,
     N: IntoView,
 {
     #[cfg(all(feature = "web", feature = "ssr"))]
@@ -856,7 +856,7 @@ where
 /// Runs the provided closure and mounts the result to the provided element.
 pub fn mount_to<F, N>(parent: web_sys::HtmlElement, f: F)
 where
-    F: FnOnce(Scope) -> N + 'static,
+    F: Fn(Scope) -> N + 'static,
     N: IntoView,
 {
     cfg_if! {
@@ -864,13 +864,15 @@ where
         let disposer = leptos_reactive::create_scope(
           leptos_reactive::create_runtime(),
           move |cx| {
-            let node = f(cx).into_view(cx);
+            leptos_reactive::create_root(cx, move |_| {
+                let node = f(cx).into_view(cx);
 
-            HydrationCtx::stop_hydrating();
+                HydrationCtx::stop_hydrating();
 
-            parent.append_child(&node.get_mountable_node()).unwrap();
+                parent.append_child(&node.get_mountable_node()).unwrap();
 
-            std::mem::forget(node);
+                std::mem::forget(node);
+            })
           },
         );
 
