@@ -18,6 +18,7 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 /// # use std::rc::Rc;
 /// # use std::cell::RefCell;
 /// # create_scope(create_runtime(), |cx| {
+/// # create_root(cx, move |_| { 
 /// let (a, set_a) = create_signal(cx, 0);
 /// let is_selected = create_selector(cx, a);
 /// let total_notifications = Rc::new(RefCell::new(0));
@@ -41,6 +42,7 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 /// assert_eq!(*total_notifications.borrow(), 1);
 /// set_a(4);
 /// assert_eq!(is_selected(5), false);
+///  # })
 ///  # })
 ///  # .dispose()
 /// ```
