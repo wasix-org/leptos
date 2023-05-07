@@ -109,9 +109,9 @@ impl Runtime {
             }
 
             // dispose of any of our properties
-            let properties = { self.node_properties.borrow_mut().remove(node_id) };
-            if let Some(properties) = properties
-            {
+            let properties =
+                { self.node_properties.borrow_mut().remove(node_id) };
+            if let Some(properties) = properties {
                 let mut nodes = self.nodes.borrow_mut();
                 let mut cleanups = self.on_cleanups.borrow_mut();
                 for property in properties {
@@ -186,11 +186,9 @@ impl Runtime {
             | ScopeProperty::Trigger(node)
             | ScopeProperty::Effect(node) => {
                 // clean up all children
-                let properties = { self.node_properties.borrow_mut().remove(node) };
-                for property in properties
-                    .into_iter()
-                    .flatten()
-                {
+                let properties =
+                    { self.node_properties.borrow_mut().remove(node) };
+                for property in properties.into_iter().flatten() {
                     self.cleanup_property(property, nodes, cleanups);
                 }
 
@@ -479,8 +477,7 @@ impl Runtime {
 
 impl Debug for Runtime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Runtime")
-            .finish()
+        f.debug_struct("Runtime").finish()
     }
 }
 /// Get the selected runtime from the thread-local set of runtimes. On the server,
@@ -550,7 +547,10 @@ impl RuntimeId {
     // TODO remove this
     pub(crate) fn raw_scope_and_disposer(self) -> (Scope, ScopeDisposer) {
         with_runtime(self, |runtime| {
-            let scope = Scope { runtime: self, id: Default::default() };
+            let scope = Scope {
+                runtime: self,
+                id: Default::default(),
+            };
             let disposer = ScopeDisposer(scope);
             (scope, disposer)
         })
@@ -566,7 +566,10 @@ impl RuntimeId {
         parent: Option<Scope>,
     ) -> (Scope, ScopeDisposer) {
         with_runtime(self, |runtime| {
-            let scope = Scope { runtime: self, id: Default::default() };
+            let scope = Scope {
+                runtime: self,
+                id: Default::default(),
+            };
             let disposer = ScopeDisposer(scope);
             (scope, disposer)
         })

@@ -18,7 +18,7 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 /// # use std::rc::Rc;
 /// # use std::cell::RefCell;
 /// # create_scope(create_runtime(), |cx| {
-/// # create_root(cx, move |_| { 
+/// # create_root(cx, move |_| {
 /// let (a, set_a) = create_signal(cx, 0);
 /// let is_selected = create_selector(cx, a);
 /// let total_notifications = Rc::new(RefCell::new(0));

@@ -230,8 +230,7 @@ impl Scope {
         instrument(level = "trace", skip_all,)
     )]
     pub fn dispose(self) {
-        _ = with_runtime(self.runtime, |runtime| {
-        })
+        _ = with_runtime(self.runtime, |runtime| {})
     }
     #[cfg_attr(
         any(debug_assertions, features = "ssr"),
