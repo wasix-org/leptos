@@ -46,9 +46,6 @@ pub(crate) struct Runtime {
     pub shared_context: RefCell<SharedContext>,
     pub owner: Cell<Option<NodeId>>,
     pub observer: Cell<Option<NodeId>>,
-    pub scopes: RefCell<SlotMap<ScopeId, RefCell<Vec<ScopeProperty>>>>,
-    pub scope_parents: RefCell<SparseSecondaryMap<ScopeId, ScopeId>>,
-    pub scope_children: RefCell<SparseSecondaryMap<ScopeId, Vec<ScopeId>>>,
     #[allow(clippy::type_complexity)]
     pub on_cleanups:
         RefCell<SparseSecondaryMap<NodeId, Vec<Box<dyn FnOnce()>>>>,
@@ -111,6 +108,17 @@ impl Runtime {
                 }
             }
 
+            // dispose of any of our properties
+            let properties = { self.node_properties.borrow_mut().remove(node_id) };
+            if let Some(properties) = properties
+            {
+                let mut nodes = self.nodes.borrow_mut();
+                let mut cleanups = self.on_cleanups.borrow_mut();
+                for property in properties {
+                    self.cleanup_property(property, &mut nodes, &mut cleanups);
+                }
+            }
+
             // now, update the value
             self.update(node_id);
         }
@@ -137,7 +145,7 @@ impl Runtime {
                     // set this node as the observer
                     self.with_observer(node_id, move || {
                         // clean up sources of this memo/effect
-                        self.cleanup(node_id);
+                        self.cleanup_sources(node_id);
 
                         f.run(value)
                     })
@@ -166,7 +174,60 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn cleanup(&self, node_id: NodeId) {
+    pub(crate) fn cleanup_property(
+        &self,
+        property: ScopeProperty,
+        nodes: &mut SlotMap<NodeId, ReactiveNode>,
+        cleanups: &mut SparseSecondaryMap<NodeId, Vec<Box<dyn FnOnce()>>>,
+    ) {
+        // for signals, triggers, memos, effects, shared node cleanup
+        match property {
+            ScopeProperty::Signal(node)
+            | ScopeProperty::Trigger(node)
+            | ScopeProperty::Effect(node) => {
+                // clean up all children
+                let properties = { self.node_properties.borrow_mut().remove(node) };
+                for property in properties
+                    .into_iter()
+                    .flatten()
+                {
+                    self.cleanup_property(property, nodes, cleanups);
+                }
+
+                // run all cleanups for this node
+                for cleanup in cleanups.remove(node).into_iter().flatten() {
+                    cleanup();
+                }
+
+                // each of the subs needs to remove the node from its dependencies
+                // so that it doesn't try to read the (now disposed) signal
+                let subs = self.node_subscribers.borrow_mut().remove(node);
+
+                if let Some(subs) = subs {
+                    let source_map = self.node_sources.borrow();
+                    for effect in subs.borrow().iter() {
+                        if let Some(effect_sources) = source_map.get(*effect) {
+                            effect_sources.borrow_mut().remove(&node);
+                        }
+                    }
+                }
+
+                // no longer needs to track its sources
+                self.node_sources.borrow_mut().remove(node);
+
+                // remove the node from the graph
+                nodes.remove(node);
+            }
+            ScopeProperty::Resource(id) => {
+                self.resources.borrow_mut().remove(id);
+            }
+            ScopeProperty::StoredValue(id) => {
+                self.stored_values.borrow_mut().remove(id);
+            }
+        }
+    }
+
+    pub(crate) fn cleanup_sources(&self, node_id: NodeId) {
         let sources = self.node_sources.borrow();
         if let Some(sources) = sources.get(node_id) {
             let subs = self.node_subscribers.borrow();
@@ -186,12 +247,15 @@ impl Runtime {
     }
 
     fn with_observer<T>(&self, observer: NodeId, f: impl FnOnce() -> T) -> T {
+        // take previous observer and owner
         let prev_observer = self.observer.take();
+        let prev_owner = self.owner.take();
+
         self.owner.set(Some(observer));
         self.observer.set(Some(observer));
         let v = f();
         self.observer.set(prev_observer);
-        self.owner.set(prev_observer);
+        self.owner.set(prev_owner);
         v
     }
 
@@ -416,11 +480,6 @@ impl Runtime {
 impl Debug for Runtime {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Runtime")
-            .field("shared_context", &self.shared_context)
-            .field("observer", &self.observer)
-            .field("scopes", &self.scopes)
-            .field("scope_parents", &self.scope_parents)
-            .field("scope_children", &self.scope_children)
             .finish()
     }
 }
@@ -477,6 +536,7 @@ slotmap::new_key_type! {
 pub struct RuntimeId;
 
 impl RuntimeId {
+    // TODO remove this
     /// Removes the runtime, disposing all its child [`Scope`](crate::Scope)s.
     pub fn dispose(self) {
         cfg_if! {
@@ -487,10 +547,10 @@ impl RuntimeId {
         }
     }
 
+    // TODO remove this
     pub(crate) fn raw_scope_and_disposer(self) -> (Scope, ScopeDisposer) {
         with_runtime(self, |runtime| {
-            let id = { runtime.scopes.borrow_mut().insert(Default::default()) };
-            let scope = Scope { runtime: self, id };
+            let scope = Scope { runtime: self, id: Default::default() };
             let disposer = ScopeDisposer(scope);
             (scope, disposer)
         })
@@ -500,22 +560,20 @@ impl RuntimeId {
         )
     }
 
+    // TODO remove this
     pub(crate) fn raw_scope_and_disposer_with_parent(
         self,
         parent: Option<Scope>,
     ) -> (Scope, ScopeDisposer) {
         with_runtime(self, |runtime| {
-            let id = { runtime.scopes.borrow_mut().insert(Default::default()) };
-            if let Some(parent) = parent {
-                runtime.scope_parents.borrow_mut().insert(id, parent.id);
-            }
-            let scope = Scope { runtime: self, id };
+            let scope = Scope { runtime: self, id: Default::default() };
             let disposer = ScopeDisposer(scope);
             (scope, disposer)
         })
         .expect("tried to crate scope in a runtime that has been disposed")
     }
 
+    // TODO remove this
     #[inline(always)]
     pub(crate) fn run_scope_undisposed<T>(
         self,
@@ -527,6 +585,7 @@ impl RuntimeId {
         (f(scope), scope.id, disposer)
     }
 
+    // TODO remove this
     #[inline(always)]
     pub(crate) fn run_scope<T>(
         self,
@@ -603,62 +662,6 @@ impl RuntimeId {
                 defined_at: std::panic::Location::caller(),
             },
         )
-    }
-
-    #[track_caller]
-    pub(crate) fn create_many_signals_with_map<T, U>(
-        self,
-        cx: Scope,
-        values: impl IntoIterator<Item = T>,
-        map_fn: impl Fn((ReadSignal<T>, WriteSignal<T>)) -> U,
-    ) -> Vec<U>
-    where
-        T: Any + 'static,
-    {
-        with_runtime(self, move |runtime| {
-            let mut signals = runtime.nodes.borrow_mut();
-            let properties = runtime.scopes.borrow();
-            let mut properties = properties
-                .get(cx.id)
-                .expect(
-                    "tried to add signals to a scope that has been disposed",
-                )
-                .borrow_mut();
-            let values = values.into_iter();
-            let size = values.size_hint().0;
-            signals.reserve(size);
-            properties.reserve(size);
-            values
-                .map(|value| {
-                    signals.insert(ReactiveNode {
-                        value: Some(Rc::new(RefCell::new(value))),
-                        state: ReactiveNodeState::Clean,
-                        node_type: ReactiveNodeType::Signal,
-                    })
-                })
-                .map(|id| {
-                    properties.push(ScopeProperty::Signal(id));
-                    (
-                        ReadSignal {
-                            runtime: self,
-                            id,
-                            ty: PhantomData,
-                            #[cfg(any(debug_assertions, feature = "ssr"))]
-                            defined_at: std::panic::Location::caller(),
-                        },
-                        WriteSignal {
-                            runtime: self,
-                            id,
-                            ty: PhantomData,
-                            #[cfg(any(debug_assertions, feature = "ssr"))]
-                            defined_at: std::panic::Location::caller(),
-                        },
-                    )
-                })
-                .map(map_fn)
-                .collect()
-        })
-        .expect("tried to create a signal in a runtime that has been disposed")
     }
 
     #[track_caller]

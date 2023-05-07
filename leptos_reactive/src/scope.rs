@@ -109,17 +109,6 @@ impl Scope {
         self.id
     }
 
-    /// Returns the chain of scope IDs beginning with this one, going to its parent, grandparents, etc.
-    pub fn ancestry(&self) -> Vec<ScopeId> {
-        let mut ids = vec![self.id];
-        let mut cx = *self;
-        while let Some(parent) = cx.parent() {
-            ids.push(parent.id());
-            cx = parent;
-        }
-        ids
-    }
-
     /// Creates a child scope and runs the given function within it, returning a handle to dispose of it.
     ///
     /// The child scope has its own lifetime and disposer, but will be disposed when the parent is
@@ -159,23 +148,7 @@ impl Scope {
         let (res, child_id, disposer) =
             self.runtime.run_scope_undisposed(f, Some(self));
 
-        self.push_child(child_id);
-
         (res, disposer)
-    }
-
-    fn push_child(&self, child_id: ScopeId) {
-        _ = with_runtime(self.runtime, |runtime| {
-            let mut children = runtime.scope_children.borrow_mut();
-            children
-                .entry(self.id)
-                .expect(
-                    "trying to add a child to a Scope that has already been \
-                     disposed",
-                )
-                .or_default()
-                .push(child_id);
-        });
     }
 
     /// Suspends reactive tracking while running the given function.
@@ -258,82 +231,6 @@ impl Scope {
     )]
     pub fn dispose(self) {
         _ = with_runtime(self.runtime, |runtime| {
-            // dispose of all child scopes
-            let children = {
-                let mut children = runtime.scope_children.borrow_mut();
-                children.remove(self.id)
-            };
-
-            if let Some(children) = children {
-                for id in children {
-                    Scope {
-                        runtime: self.runtime,
-                        id,
-                    }
-                    .dispose();
-                }
-            }
-
-            runtime.scope_parents.borrow_mut().remove(self.id);
-
-            // remove everything we own and run cleanups
-            let owned = {
-                let owned = runtime.scopes.borrow_mut().remove(self.id);
-                owned.map(|owned| owned.take())
-            };
-            if let Some(owned) = owned {
-                let mut nodes = runtime.nodes.borrow_mut();
-                let mut cleanups = runtime.on_cleanups.borrow_mut();
-
-                for property in owned {
-                    match property {
-                        ScopeProperty::Signal(id)
-                        | ScopeProperty::Trigger(id) => {
-                            // remove the signal
-                            nodes.remove(id);
-                            let subs = runtime
-                                .node_subscribers
-                                .borrow_mut()
-                                .remove(id);
-
-                            // run any of its cleanups
-                            for cleanup in
-                                cleanups.remove(id).into_iter().flatten()
-                            {
-                                cleanup();
-                            }
-
-                            // each of the subs needs to remove the signal from its dependencies
-                            // so that it doesn't try to read the (now disposed) signal
-                            if let Some(subs) = subs {
-                                let source_map = runtime.node_sources.borrow();
-                                for effect in subs.borrow().iter() {
-                                    if let Some(effect_sources) =
-                                        source_map.get(*effect)
-                                    {
-                                        effect_sources.borrow_mut().remove(&id);
-                                    }
-                                }
-                            }
-                        }
-                        ScopeProperty::Effect(id) => {
-                            for cleanup in
-                                cleanups.remove(id).into_iter().flatten()
-                            {
-                                cleanup();
-                            }
-                            nodes.remove(id);
-                            runtime.node_sources.borrow_mut().remove(id);
-                        }
-                        ScopeProperty::Resource(id) => {
-                            runtime.resources.borrow_mut().remove(id);
-                        }
-                        ScopeProperty::StoredValue(id) => {
-                            runtime.stored_values.borrow_mut().remove(id);
-                        }
-                    }
-                }
-            }
         })
     }
     #[cfg_attr(
@@ -350,32 +247,7 @@ impl Scope {
                 #[cfg(debug_assertions)]
                 defined_at,
             );
-
-            let scopes = runtime.scopes.borrow();
-            if let Some(scope) = scopes.get(self.id) {
-                scope.borrow_mut().push(prop);
-            } else {
-                console_warn(
-                    "tried to add property to a scope that has been disposed",
-                )
-            }
         })
-    }
-    #[cfg_attr(
-        any(debug_assertions, features = "ssr"),
-        instrument(level = "trace", skip_all,)
-    )]
-    /// Returns the the parent Scope, if any.
-    pub fn parent(&self) -> Option<Scope> {
-        match with_runtime(self.runtime, |runtime| {
-            runtime.scope_parents.borrow().get(self.id).copied()
-        }) {
-            Ok(Some(id)) => Some(Scope {
-                runtime: self.runtime,
-                id,
-            }),
-            _ => None,
-        }
     }
 }
 

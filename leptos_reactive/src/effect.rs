@@ -66,7 +66,10 @@ where
     cfg_if! {
         if #[cfg(not(feature = "ssr"))] {
             let e = cx.runtime.create_effect(f);
-            cx.push_scope_property(ScopeProperty::Effect(e))
+            cx.push_scope_property(ScopeProperty::Effect(e));
+            with_runtime(cx.runtime, |runtime| {
+                runtime.update_if_necessary(e);
+            });
         } else {
             // clear warnings
             _ = cx;
@@ -122,6 +125,7 @@ pub fn create_isomorphic_effect<T>(
 {
     let e = cx.runtime.create_effect(f);
     cx.push_scope_property(ScopeProperty::Effect(e));
+    crate::macros::debug_warn!("creating effect {e:?}");
     with_runtime(cx.runtime, |runtime| {
         runtime.update_if_necessary(e);
     });
@@ -148,6 +152,7 @@ where
     T: 'static,
 {
     let e = cx.runtime.create_effect(f);
+    crate::macros::debug_warn!("creating root {e:?}");
     with_runtime(cx.runtime, |runtime| {
         runtime.update_if_necessary(e);
     });
