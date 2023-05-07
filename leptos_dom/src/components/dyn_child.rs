@@ -185,24 +185,17 @@ where
             #[cfg(all(target_arch = "wasm32", feature = "web"))]
             create_effect(
                 cx,
-                move |prev_run: Option<(
-                    Option<web_sys::Node>,
-                    ScopeDisposer,
-                )>| {
+                move |prev_run: Option<Option<web_sys::Node>>| {
                     #[cfg(debug_assertions)]
                     let _guard = span.enter();
 
-                    let (new_child, disposer) =
-                        cx.run_child_scope(|cx| child_fn().into_view(cx));
+                    let new_child = child_fn().into_view(cx);
 
                     let mut child_borrow = child.borrow_mut();
 
                     // Is this at least the second time we are loading a child?
-                    if let Some((prev_t, prev_disposer)) = prev_run {
+                    if let Some(prev_t) = prev_run {
                         let child = child_borrow.take().unwrap();
-
-                        // Dispose of the scope
-                        prev_disposer.dispose();
 
                         // We need to know if our child wasn't moved elsewhere.
                         // If it was, `DynChild` no longer "owns" that child, and
@@ -230,7 +223,7 @@ where
 
                                     **child_borrow = Some(new_child);
 
-                                    (Some(prev_t), disposer)
+                                    Some(prev_t)
                                 } else {
                                     mount_child(
                                         MountKind::Before(&closing),
@@ -239,7 +232,7 @@ where
 
                                     **child_borrow = Some(new_child.clone());
 
-                                    (Some(new_t.node.clone()), disposer)
+                                    Some(new_t.node.clone())
                                 }
                             }
                             // Child is not a text node, so we can remove the previous
@@ -262,7 +255,7 @@ where
 
                                 **child_borrow = Some(new_child);
 
-                                (None, disposer)
+                                None
                             }
                         }
                         // Otherwise, the new child can still be a text node,
@@ -295,7 +288,7 @@ where
 
                             **child_borrow = Some(new_child);
 
-                            (t, disposer)
+                            t
                         };
 
                         ret
@@ -343,7 +336,7 @@ where
 
                         **child_borrow = Some(new_child);
 
-                        (t, disposer)
+                        t
                     }
                 },
             );
