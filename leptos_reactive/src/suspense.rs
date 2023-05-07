@@ -50,11 +50,11 @@ impl Eq for SuspenseContext {}
 
 impl SuspenseContext {
     /// Creates an empty suspense context.
-    pub fn new(cx: Scope) -> Self {
-        let (pending_resources, set_pending_resources) = create_signal(cx, 0);
-        let pending_serializable_resources = create_rw_signal(cx, 0);
-        let has_local_only = store_value(cx, true);
-        let should_block = store_value(cx, false);
+    pub fn new() -> Self {
+        let (pending_resources, set_pending_resources) = create_signal(0);
+        let pending_serializable_resources = create_rw_signal(0);
+        let has_local_only = store_value(true);
+        let should_block = store_value(false);
         Self {
             pending_resources,
             set_pending_resources,

@@ -7,7 +7,7 @@ fn context() {
 
     create_scope(create_runtime(), |cx| {
         create_root(cx, move |_| {
-            create_isomorphic_effect(cx, {
+            create_isomorphic_effect({
                 move |_| {
                     provide_context(cx, String::from("test"));
                     assert_eq!(
@@ -17,7 +17,7 @@ fn context() {
                     assert_eq!(use_context::<i32>(cx), None);
                     assert_eq!(use_context::<bool>(cx), None);
 
-                    create_isomorphic_effect(cx, {
+                    create_isomorphic_effect({
                         move |_| {
                             provide_context(cx, 0i32);
                             assert_eq!(
@@ -27,7 +27,7 @@ fn context() {
                             assert_eq!(use_context::<i32>(cx), Some(0));
                             assert_eq!(use_context::<bool>(cx), None);
 
-                            create_isomorphic_effect(cx, {
+                            create_isomorphic_effect({
                                 move |_| {
                                     provide_context(cx, false);
                                     assert_eq!(

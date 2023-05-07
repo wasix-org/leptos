@@ -6,7 +6,7 @@ use crate::{
     runtime::{with_runtime, RuntimeId},
     suspense::StreamChunk,
     PinnedFuture, ResourceId, SpecialNonReactiveZone, StoredValueId,
-    SuspenseContext,
+    SuspenseContext, Runtime
 };
 use futures::stream::FuturesUnordered;
 use std::{
@@ -150,71 +150,9 @@ impl Scope {
 
         (res, disposer)
     }
-
-    /// Suspends reactive tracking while running the given function.
-    ///
-    /// This can be used to isolate parts of the reactive graph from one another.
-    ///
-    /// ```
-    /// # use leptos_reactive::*;
-    /// # run_scope(create_runtime(), |cx| {
-    /// let (a, set_a) = create_signal(cx, 0);
-    /// let (b, set_b) = create_signal(cx, 0);
-    /// let c = create_memo(cx, move |_| {
-    ///     // this memo will *only* update when `a` changes
-    ///     a() + cx.untrack(move || b())
-    /// });
-    ///
-    /// assert_eq!(c(), 0);
-    /// set_a(1);
-    /// assert_eq!(c(), 1);
-    /// set_b(1);
-    /// // hasn't updated, because we untracked before reading b
-    /// assert_eq!(c(), 1);
-    /// set_a(2);
-    /// assert_eq!(c(), 3);
-    ///
-    /// # });
-    /// ```
-    #[cfg_attr(
-        any(debug_assertions, features = "ssr"),
-        instrument(level = "trace", skip_all,)
-    )]
-    #[inline(always)]
-    pub fn untrack<T>(&self, f: impl FnOnce() -> T) -> T {
-        with_runtime(self.runtime, |runtime| {
-            let untracked_result;
-
-            SpecialNonReactiveZone::enter();
-
-            let prev_observer =
-                SetObserverOnDrop(self.runtime, runtime.observer.take());
-
-            untracked_result = f();
-
-            runtime.observer.set(prev_observer.1);
-            std::mem::forget(prev_observer); // avoid Drop
-
-            SpecialNonReactiveZone::exit();
-
-            untracked_result
-        })
-        .expect(
-            "tried to run untracked function in a runtime that has been \
-             disposed",
-        )
-    }
 }
 
-struct SetObserverOnDrop(RuntimeId, Option<NodeId>);
 
-impl Drop for SetObserverOnDrop {
-    fn drop(&mut self) {
-        _ = with_runtime(self.0, |rt| {
-            rt.observer.set(self.1);
-        });
-    }
-}
 
 // Internals
 
@@ -232,30 +170,14 @@ impl Scope {
     pub fn dispose(self) {
         _ = with_runtime(self.runtime, |runtime| {})
     }
-    #[cfg_attr(
-        any(debug_assertions, features = "ssr"),
-        instrument(level = "trace", skip_all,)
-    )]
-    #[track_caller]
-    pub(crate) fn push_scope_property(&self, prop: ScopeProperty) {
-        #[cfg(debug_assertions)]
-        let defined_at = std::panic::Location::caller();
-        _ = with_runtime(self.runtime, |runtime| {
-            runtime.register_property(
-                prop,
-                #[cfg(debug_assertions)]
-                defined_at,
-            );
-        })
-    }
 }
 
 #[cfg_attr(
     any(debug_assertions, features = "ssr"),
     instrument(level = "trace", skip_all,)
 )]
-fn push_cleanup(cx: Scope, cleanup_fn: Box<dyn FnOnce()>) {
-    _ = with_runtime(cx.runtime, |runtime| {
+fn push_cleanup(cleanup_fn: Box<dyn FnOnce()>) {
+    _ = with_runtime(Runtime::current(), |runtime| {
         if let Some(owner) = runtime.owner.get() {
             let mut cleanups = runtime.on_cleanups.borrow_mut();
             if let Some(entries) = cleanups.get_mut(owner) {
@@ -272,8 +194,8 @@ fn push_cleanup(cx: Scope, cleanup_fn: Box<dyn FnOnce()>) {
 /// It runs after child scopes have been disposed, but before signals, effects, and resources
 /// are invalidated.
 #[inline(always)]
-pub fn on_cleanup(cx: Scope, cleanup_fn: impl FnOnce() + 'static) {
-    push_cleanup(cx, Box::new(cleanup_fn))
+pub fn on_cleanup(cleanup_fn: impl FnOnce() + 'static) {
+    push_cleanup(Box::new(cleanup_fn))
 }
 
 slotmap::new_key_type! {
@@ -355,7 +277,7 @@ impl Scope {
         &self,
     ) -> FuturesUnordered<PinnedFuture<(ResourceId, String)>> {
         with_runtime(self.runtime, |runtime| {
-            runtime.serialization_resolvers(*self)
+            runtime.serialization_resolvers()
         })
         .unwrap_or_default()
     }
@@ -382,7 +304,7 @@ impl Scope {
             let (tx2, mut rx2) = futures::channel::mpsc::unbounded();
             let (tx3, mut rx3) = futures::channel::mpsc::unbounded();
 
-            create_isomorphic_effect(*self, move |_| {
+            create_isomorphic_effect(move |_| {
                 let pending = context
                     .pending_serializable_resources
                     .read_only()

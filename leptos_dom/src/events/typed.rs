@@ -110,7 +110,7 @@ impl<E: FromWasmAbi> Custom<E> {
     /// let options = non_passive_wheel.options_mut();
     /// options.passive(false);
     /// # }
-    /// canvas_ref.on_load(cx, move |canvas: HtmlElement<html::Canvas>| {
+    /// canvas_ref.on_load(move |canvas: HtmlElement<html::Canvas>| {
     ///     canvas.on(non_passive_wheel, move |_event| {
     ///         // Handle _event
     ///     });

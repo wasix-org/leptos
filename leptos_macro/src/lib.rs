@@ -312,65 +312,52 @@ mod template;
 pub fn view(tokens: TokenStream) -> TokenStream {
     let tokens: proc_macro2::TokenStream = tokens.into();
     let mut tokens = tokens.into_iter();
-    let (cx, comma) = (tokens.next(), tokens.next());
-
-    match (cx, comma) {
-        (Some(TokenTree::Ident(cx)), Some(TokenTree::Punct(punct)))
-            if punct.as_char() == ',' =>
+    
+    let first = tokens.next();
+    let second = tokens.next();
+    let third = tokens.next();
+    let fourth = tokens.next();
+    let global_class = match (&first, &second) {
+        (Some(TokenTree::Ident(first)), Some(TokenTree::Punct(eq)))
+            if *first == "class" && eq.as_char() == '=' =>
         {
-            let first = tokens.next();
-            let second = tokens.next();
-            let third = tokens.next();
-            let fourth = tokens.next();
-            let global_class = match (&first, &second) {
-                (Some(TokenTree::Ident(first)), Some(TokenTree::Punct(eq)))
-                    if *first == "class" && eq.as_char() == '=' =>
+            match &fourth {
+                Some(TokenTree::Punct(comma))
+                    if comma.as_char() == ',' =>
                 {
-                    match &fourth {
-                        Some(TokenTree::Punct(comma))
-                            if comma.as_char() == ',' =>
-                        {
-                            third.clone()
-                        }
-                        _ => {
-                            abort!(
-                                punct, "To create a scope class with the view! macro you must put a comma `,` after the value";
-                                help = r#"e.g., view!{cx, class="my-class", <div>...</div>}"#
-                            )
-                        }
-                    }
+                    third.clone()
                 }
-                _ => None,
-            };
-            let tokens = if global_class.is_some() {
-                tokens.collect::<proc_macro2::TokenStream>()
-            } else {
-                [first, second, third, fourth]
-                    .into_iter()
-                    .flatten()
-                    .chain(tokens)
-                    .collect()
-            };
-
-            match parse(tokens.into()) {
-                Ok(nodes) => render_view(
-                    &proc_macro2::Ident::new(&cx.to_string(), cx.span()),
-                    &nodes,
-                    Mode::default(),
-                    global_class.as_ref(),
-                    normalized_call_site(proc_macro::Span::call_site()),
-                ),
-                Err(error) => error.to_compile_error(),
+                _ => {
+                    abort!(
+                        Span::call_site(), "To create a scope class with the view! macro you must put a comma `,` after the value";
+                        help = r#"e.g., view!{ class="my-class", <div>...</div> }"#
+                    )
+                }
             }
-            .into()
         }
-        _ => {
-            abort_call_site!(
-                "view! macro needs a context and RSX: e.g., view! {{ cx, \
-                 <div>...</div> }}"
-            )
-        }
+        _ => None,
+    };
+    
+    let tokens = if global_class.is_some() {
+        tokens.collect::<proc_macro2::TokenStream>()
+    } else {
+        [first, second, third, fourth]
+            .into_iter()
+            .flatten()
+            .chain(tokens)
+            .collect()
+    };
+
+    match parse(tokens.into()) {
+        Ok(nodes) => render_view(
+            &nodes,
+            Mode::default(),
+            global_class.as_ref(),
+            normalized_call_site(proc_macro::Span::call_site()),
+        ),
+        Err(error) => error.to_compile_error(),
     }
+    .into()
 }
 
 fn normalized_call_site(site: proc_macro::Span) -> Option<String> {
@@ -395,30 +382,14 @@ fn normalized_call_site(site: proc_macro::Span) -> Option<String> {
 #[proc_macro]
 pub fn template(tokens: TokenStream) -> TokenStream {
     if cfg!(feature = "csr") {
-        let tokens: proc_macro2::TokenStream = tokens.into();
-        let mut tokens = tokens.into_iter();
-        let (cx, comma) = (tokens.next(), tokens.next());
-        match (cx, comma) {
-            (Some(TokenTree::Ident(cx)), Some(TokenTree::Punct(punct)))
-                if punct.as_char() == ',' =>
-            {
-                match parse(tokens.collect::<proc_macro2::TokenStream>().into())
-                {
-                    Ok(nodes) => render_template(
-                        &proc_macro2::Ident::new(&cx.to_string(), cx.span()),
-                        &nodes,
-                    ),
-                    Err(error) => error.to_compile_error(),
-                }
-                .into()
-            }
-            _ => {
-                abort_call_site!(
-                    "view! macro needs a context and RSX: e.g., view! {{ cx, \
-                     <div>...</div> }}"
-                )
-            }
+        match parse(tokens)
+        {
+            Ok(nodes) => render_template(
+                &nodes,
+            ),
+            Err(error) => error.to_compile_error(),
         }
+        .into()
     } else {
         view(tokens)
     }

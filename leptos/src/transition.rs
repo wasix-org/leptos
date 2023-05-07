@@ -26,28 +26,28 @@ use std::{
 ///     Some(vec![])
 /// }
 ///
-/// let (cat_count, set_cat_count) = create_signal::<u32>(cx, 1);
-/// let (pending, set_pending) = create_signal(cx, false);
+/// let (cat_count, set_cat_count) = create_signal::<u32>( 1);
+/// let (pending, set_pending) = create_signal( false);
 ///
-/// let cats = create_resource(cx, cat_count, |count| fetch_cats(count));
+/// let cats = create_resource( cat_count, |count| fetch_cats(count));
 ///
-/// view! { cx,
+/// view! { 
 ///   <div>
 ///     <Transition
-///       fallback=move || view! { cx, <p>"Loading..."</p>}
+///       fallback=move || view! {  <p>"Loading..."</p>}
 ///       set_pending=set_pending.into()
 ///     >
 ///       {move || {
-///           cats.read(cx).map(|data| match data {
-///             None => view! { cx,  <pre>"Error"</pre> }.into_view(cx),
+///           cats.read().map(|data| match data {
+///             None => view! {   <pre>"Error"</pre> }.into_view(),
 ///             Some(cats) => cats
 ///                 .iter()
 ///                 .map(|src| {
-///                     view! { cx,
+///                     view! { 
 ///                       <img src={src}/>
 ///                     }
 ///                 })
-///                 .collect_view(cx),
+///                 .collect_view(),
 ///           })
 ///         }
 ///       }
@@ -63,7 +63,7 @@ use std::{
 )]
 #[component(transparent)]
 pub fn Transition<F, E>(
-    cx: Scope,
+    
     /// Will be displayed while resources are pending.
     fallback: F,
     /// A function that will be called when the component transitions into or out of
@@ -72,7 +72,7 @@ pub fn Transition<F, E>(
     #[prop(optional)]
     set_pending: Option<SignalSetter<bool>>,
     /// Will be displayed once all resources have resolved.
-    children: Box<dyn Fn(Scope) -> Fragment>,
+    children: Box<dyn Fn() -> Fragment>,
 ) -> impl IntoView
 where
     F: Fn() -> E + 'static,
@@ -84,13 +84,13 @@ where
     let child_runs = Cell::new(0);
 
     crate::Suspense(
-        cx,
+        
         crate::SuspenseProps::builder()
             .fallback({
                 let prev_child = Rc::clone(&prev_children);
                 let first_run = Rc::clone(&first_run);
                 move || {
-                    let suspense_context = use_context::<SuspenseContext>(cx)
+                    let suspense_context = use_context::<SuspenseContext>()
                         .expect("there to be a SuspenseContext");
 
                     let is_first_run =
@@ -102,19 +102,19 @@ where
                     }
                     if let Some(prev_children) = &*prev_child.borrow() {
                         if is_first_run {
-                            fallback().into_view(cx)
+                            fallback().into_view()
                         } else {
-                            prev_children.clone().into_view(cx)
+                            prev_children.clone().into_view()
                         }
                     } else {
-                        fallback().into_view(cx)
+                        fallback().into_view()
                     }
                 }
             })
-            .children(Box::new(move |cx| {
-                let frag = children(cx);
+            .children(Box::new(move || {
+                let frag = children();
 
-                let suspense_context = use_context::<SuspenseContext>(cx)
+                let suspense_context = use_context::<SuspenseContext>()
                     .expect("there to be a SuspenseContext");
 
                 if cfg!(feature = "hydrate") || !first_run.get() {

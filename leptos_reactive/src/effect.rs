@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-use crate::{with_runtime, Scope, ScopeProperty};
+use crate::{with_runtime, Scope, Runtime};
 use cfg_if::cfg_if;
 use std::{any::Any, cell::RefCell, marker::PhantomData, rc::Rc};
 
@@ -52,27 +52,26 @@ use std::{any::Any, cell::RefCell, marker::PhantomData, rc::Rc};
         level = "trace",
         skip_all,
         fields(
-            scope = ?cx.id,
             ty = %std::any::type_name::<T>()
         )
     )
 )]
 #[track_caller]
 #[inline(always)]
-pub fn create_effect<T>(cx: Scope, f: impl Fn(Option<T>) -> T + 'static)
+pub fn create_effect<T>(f: impl Fn(Option<T>) -> T + 'static)
 where
     T: 'static,
 {
     cfg_if! {
         if #[cfg(not(feature = "ssr"))] {
-            let e = cx.runtime.create_effect(f);
-            cx.push_scope_property(ScopeProperty::Effect(e));
-            with_runtime(cx.runtime, |runtime| {
+            let runtime = Runtime::current();
+            let e = runtime.create_effect(f);
+            crate::macros::debug_warn!("creating effect {e:?}");
+            with_runtime(runtime, |runtime| {
                 runtime.update_if_necessary(e);
             });
         } else {
             // clear warnings
-            _ = cx;
             _ = f;
         }
     }
@@ -110,7 +109,6 @@ where
         level = "trace",
         skip_all,
         fields(
-            scope = ?cx.id,
             ty = %std::any::type_name::<T>()
         )
     )
@@ -118,15 +116,14 @@ where
 #[track_caller]
 #[inline(always)]
 pub fn create_isomorphic_effect<T>(
-    cx: Scope,
     f: impl Fn(Option<T>) -> T + 'static,
 ) where
     T: 'static,
 {
-    let e = cx.runtime.create_effect(f);
-    cx.push_scope_property(ScopeProperty::Effect(e));
+    let runtime = Runtime::current();
+    let e = runtime.create_effect(f);
     crate::macros::debug_warn!("creating effect {e:?}");
-    with_runtime(cx.runtime, |runtime| {
+    with_runtime(runtime, |runtime| {
         runtime.update_if_necessary(e);
     });
 }
@@ -140,20 +137,20 @@ pub fn create_isomorphic_effect<T>(
         level = "trace",
         skip_all,
         fields(
-            scope = ?cx.id,
             ty = %std::any::type_name::<T>()
         )
     )
 )]
 #[track_caller]
 #[inline(always)]
-pub fn create_root<T>(cx: Scope, f: impl Fn(Option<T>) -> T + 'static)
+pub fn create_root<T>(f: impl Fn(Option<T>) -> T + 'static)
 where
     T: 'static,
 {
-    let e = cx.runtime.create_effect(f);
+    let runtime = Runtime::current();
+    let e = runtime.create_effect(f);
     crate::macros::debug_warn!("creating root {e:?}");
-    with_runtime(cx.runtime, |runtime| {
+    with_runtime(runtime, |runtime| {
         runtime.update_if_necessary(e);
     });
 }
@@ -165,17 +162,16 @@ where
         level = "trace",
         skip_all,
         fields(
-            scope = ?cx.id,
             ty = %std::any::type_name::<T>()
         )
     )
 )]
 #[inline(always)]
-pub fn create_render_effect<T>(cx: Scope, f: impl Fn(Option<T>) -> T + 'static)
+pub fn create_render_effect<T>(f: impl Fn(Option<T>) -> T + 'static)
 where
     T: 'static,
 {
-    create_effect(cx, f);
+    create_effect(f);
 }
 
 pub(crate) struct Effect<T, F>

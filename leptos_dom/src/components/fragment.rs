@@ -19,7 +19,7 @@ where
         instrument(level = "info", skip_all,)
     )]
     fn into_fragment(self, cx: Scope) -> Fragment {
-        self.into_iter().map(|v| v.into_view(cx)).collect()
+        self.into_iter().map(|v| v.into_view()).collect()
     }
 }
 
@@ -106,7 +106,7 @@ impl Fragment {
 
 impl IntoView for Fragment {
     #[cfg_attr(debug_assertions, instrument(level = "info", name = "</>", skip_all, fields(children = self.nodes.len())))]
-    fn into_view(self, _: leptos_reactive::Scope) -> View {
+    fn into_view(self) -> View {
         self.into()
     }
 }

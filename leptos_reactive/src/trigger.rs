@@ -4,7 +4,7 @@ use crate::{
     diagnostics,
     diagnostics::*,
     node::NodeId,
-    runtime::{with_runtime, RuntimeId},
+    runtime::{with_runtime, Runtime, RuntimeId},
     Scope, ScopeProperty, SignalGet, SignalSet, SignalUpdate,
 };
 
@@ -95,14 +95,11 @@ impl Trigger {
     instrument(
         level = "trace",
         skip_all,
-        fields(scope = ?cx.id)
     )
 )]
 #[track_caller]
-pub fn create_trigger(cx: Scope) -> Trigger {
-    let t = cx.runtime.create_trigger();
-    cx.push_scope_property(ScopeProperty::Trigger(t.id));
-    t
+pub fn create_trigger() -> Trigger {
+    Runtime::current().create_trigger()
 }
 
 impl SignalGet<()> for Trigger {

@@ -77,7 +77,7 @@ pub fn create_slice<T, O>(
 where
     O: PartialEq,
 {
-    let getter = create_memo(cx, move |_| signal.with(getter));
+    let getter = create_memo(move |_| signal.with(getter));
     let setter = move |value| signal.update(|x| setter(x, value));
-    (getter.into(), setter.mapped_signal_setter(cx))
+    (getter.into(), setter.mapped_signal_setter())
 }

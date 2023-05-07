@@ -39,7 +39,7 @@ where
     HydrationCtx::reset_id();
 
     let html = leptos_reactive::run_scope(runtime, |cx| {
-        f(cx).into_view(cx).render_to_string(cx)
+        f(cx).into_view().render_to_string(cx)
     });
 
     runtime.dispose();

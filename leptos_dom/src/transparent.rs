@@ -44,7 +44,7 @@ impl Eq for Transparent {}
 
 impl IntoView for Transparent {
     #[inline(always)]
-    fn into_view(self, _: Scope) -> View {
+    fn into_view(self) -> View {
         View::Transparent(self)
     }
 }

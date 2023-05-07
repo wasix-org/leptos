@@ -164,7 +164,6 @@ impl Mountable for EachRepr {
 /// The internal representation of an [`Each`] item.
 #[derive(PartialEq, Eq)]
 pub(crate) struct EachItem {
-    cx: Scope,
     #[cfg(all(target_arch = "wasm32", feature = "web"))]
     document_fragment: Option<web_sys::DocumentFragment>,
     #[cfg(debug_assertions)]
@@ -190,7 +189,7 @@ impl fmt::Debug for EachItem {
 }
 
 impl EachItem {
-    fn new(cx: Scope, child: View) -> Self {
+    fn new(child: View) -> Self {
         let id = HydrationCtx::id();
         let needs_closing = !matches!(child, View::Element(_));
 
@@ -228,7 +227,6 @@ impl EachItem {
         };
 
         Self {
-            cx,
             #[cfg(all(target_arch = "wasm32", feature = "web"))]
             document_fragment,
             #[cfg(debug_assertions)]
@@ -238,13 +236,6 @@ impl EachItem {
             #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
             id,
         }
-    }
-}
-
-#[cfg(all(target_arch = "wasm32", feature = "web"))]
-impl Drop for EachItem {
-    fn drop(&mut self) {
-        self.cx.dispose();
     }
 }
 
@@ -308,7 +299,7 @@ pub struct Each<IF, I, T, EF, N, KF, K>
 where
     IF: Fn() -> I + 'static,
     I: IntoIterator<Item = T>,
-    EF: Fn(Scope, T) -> N + 'static,
+    EF: Fn(T) -> N + 'static,
     N: IntoView,
     KF: Fn(&T) -> K + 'static,
     K: Eq + Hash + 'static,
@@ -323,7 +314,7 @@ impl<IF, I, T, EF, N, KF, K> Each<IF, I, T, EF, N, KF, K>
 where
     IF: Fn() -> I + 'static,
     I: IntoIterator<Item = T>,
-    EF: Fn(Scope, T) -> N + 'static,
+    EF: Fn(T) -> N + 'static,
     N: IntoView,
     KF: Fn(&T) -> K,
     K: Eq + Hash + 'static,
@@ -344,7 +335,7 @@ impl<IF, I, T, EF, N, KF, K> IntoView for Each<IF, I, T, EF, N, KF, K>
 where
     IF: Fn() -> I + 'static,
     I: IntoIterator<Item = T>,
-    EF: Fn(Scope, T) -> N + 'static,
+    EF: Fn(T) -> N + 'static,
     N: IntoView,
     KF: Fn(&T) -> K + 'static,
     K: Eq + Hash + 'static,
@@ -354,7 +345,7 @@ where
         any(debug_assertions, feature = "ssr"),
         instrument(level = "info", name = "<Each />", skip_all)
     )]
-    fn into_view(self, cx: Scope) -> crate::View {
+    fn into_view(self) -> crate::View {
         let Self {
             items_fn,
             each_fn,
@@ -372,7 +363,7 @@ where
 
         cfg_if::cfg_if! {
           if #[cfg(all(target_arch = "wasm32", feature = "web"))] {
-            create_effect(cx, move |prev_hash_run: Option<HashRun<FxIndexSet<K>>>| {
+            create_effect(move |prev_hash_run: Option<HashRun<FxIndexSet<K>>>| {
               let mut children_borrow = children.borrow_mut();
 
               #[cfg(all(target_arch = "wasm32", feature = "web"))]
@@ -401,7 +392,6 @@ where
                     let cmds = diff(&prev_hash_run, &hashed_items);
 
                     apply_cmds(
-                        cx,
                         #[cfg(all(target_arch = "wasm32", feature = "web"))]
                         &opening,
                         #[cfg(all(target_arch = "wasm32", feature = "web"))]
@@ -422,7 +412,8 @@ where
 
                 for item in items_iter {
                   hashed_items.insert(key_fn(&item));
-                  let (each_item, _) = cx.run_child_scope(|cx| EachItem::new(cx, each_fn(cx, item).into_view(cx)));
+                  // todo check scope handling here
+                  let each_item = EachItem::new(each_fn(item).into_view());
                 #[cfg(all(target_arch = "wasm32", feature = "web"))]
                 {
                   _ = fragment.append_child(&each_item.get_mountable_node());
@@ -442,7 +433,9 @@ where
           } else {
             *component.children.borrow_mut() = (items_fn)()
               .into_iter()
-              .map(|child| cx.run_child_scope(|cx| Some(EachItem::new(cx, (each_fn)(cx, child).into_view(cx)))).0)
+              .map(|child| Some(EachItem::new((each_fn)(child).into_view())))
+              // todo check scope disposal here
+              //.map(|child| cx.run_child_scope(|cx| Some(EachItem::new((each_fn)(child).into_view()))).0)
               .collect();
           }
         }
@@ -639,7 +632,6 @@ impl Default for DiffOpAddMode {
 
 #[cfg(all(target_arch = "wasm32", feature = "web"))]
 fn apply_cmds<T, EF, N>(
-    cx: Scope,
     opening: &web_sys::Node,
     closing: &web_sys::Node,
     mut cmds: Diff,
@@ -647,7 +639,7 @@ fn apply_cmds<T, EF, N>(
     mut items: Vec<Option<T>>,
     each_fn: &EF,
 ) where
-    EF: Fn(Scope, T) -> N,
+    EF: Fn(T) -> N,
     N: IntoView,
 {
     let range = RANGE.with(|range| (*range).clone());
@@ -720,10 +712,8 @@ fn apply_cmds<T, EF, N>(
     for DiffOpAdd { at, mode } in cmds.added {
         let item = items[at].take().unwrap();
 
-        let (each_item, _) = cx.run_child_scope(|cx| {
-            let child = each_fn(cx, item).into_view(cx);
-            EachItem::new(cx, child)
-        });
+        // todo check scope handling
+        let each_item = EachItem::new(each_fn(item).into_view());
 
         match mode {
             DiffOpAddMode::Normal => {

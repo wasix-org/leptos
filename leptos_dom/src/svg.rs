@@ -162,7 +162,7 @@ macro_rules! generate_svg_tags {
         #[$meta]
         #[allow(non_snake_case)]
         pub fn [<$tag $(_ $second $(_ $third)?)? $($trailing_)?>](cx: Scope) -> HtmlElement<[<$tag:camel $($second:camel $($third:camel)?)?>]> {
-          HtmlElement::new(cx, [<$tag:camel $($second:camel $($third:camel)?)?>]::default())
+          HtmlElement::new([<$tag:camel $($second:camel $($third:camel)?)?>]::default())
         }
       )*
     }

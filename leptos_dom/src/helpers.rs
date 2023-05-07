@@ -250,7 +250,7 @@ pub fn set_timeout_with_handle(
 /// #[component]
 /// fn DebouncedButton(cx: Scope) -> impl IntoView {
 ///     let delay = std::time::Duration::from_millis(250);
-///     let on_click = debounce(cx, delay, move |_| {
+///     let on_click = debounce(delay, move |_| {
 ///         log!("...so many clicks!");
 ///     });
 ///
@@ -260,7 +260,6 @@ pub fn set_timeout_with_handle(
 /// }
 /// ```
 pub fn debounce<T: 'static>(
-    cx: Scope,
     delay: Duration,
     #[cfg(debug_assertions)] mut cb: impl FnMut(T) + 'static,
     #[cfg(not(debug_assertions))] cb: impl FnMut(T) + 'static,
@@ -285,7 +284,7 @@ pub fn debounce<T: 'static>(
 
     let timer = Rc::new(Cell::new(None::<TimeoutHandle>));
 
-    on_cleanup(cx, {
+    on_cleanup({
         let timer = Rc::clone(&timer);
         move || {
             if let Some(timer) = timer.take() {

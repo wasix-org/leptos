@@ -24,24 +24,24 @@ use std::rc::Rc;
 /// # run_scope(create_runtime(), |cx| {
 /// async fn fetch_cats(how_many: u32) -> Option<Vec<String>> { Some(vec![]) }
 ///
-/// let (cat_count, set_cat_count) = create_signal::<u32>(cx, 1);
+/// let (cat_count, set_cat_count) = create_signal::<u32>( 1);
 ///
-/// let cats = create_resource(cx, cat_count, |count| fetch_cats(count));
+/// let cats = create_resource( cat_count, |count| fetch_cats(count));
 ///
-/// view! { cx,
+/// view! { 
 ///   <div>
-///     <Suspense fallback=move || view! { cx, <p>"Loading (Suspense Fallback)..."</p> }>
+///     <Suspense fallback=move || view! {  <p>"Loading (Suspense Fallback)..."</p> }>
 ///       {move || {
-///           cats.read(cx).map(|data| match data {
-///             None => view! { cx,  <pre>"Error"</pre> }.into_view(cx),
+///           cats.read().map(|data| match data {
+///             None => view! {   <pre>"Error"</pre> }.into_view(),
 ///             Some(cats) => cats
 ///                 .iter()
 ///                 .map(|src| {
-///                     view! { cx,
+///                     view! { 
 ///                       <img src={src}/>
 ///                     }
 ///                 })
-///                 .collect_view(cx),
+///                 .collect_view(),
 ///           })
 ///         }
 ///       }
@@ -57,27 +57,25 @@ use std::rc::Rc;
 )]
 #[component(transparent)]
 pub fn Suspense<F, E>(
-    cx: Scope,
+    
     /// Returns a fallback UI that will be shown while `async` [Resources](leptos_reactive::Resource) are still loading.
     fallback: F,
     /// Children will be displayed once all `async` [Resources](leptos_reactive::Resource) have resolved.
-    children: Box<dyn Fn(Scope) -> Fragment>,
+    children: Box<dyn Fn() -> Fragment>,
 ) -> impl IntoView
 where
     F: Fn() -> E + 'static,
     E: IntoView,
 {
-    let context = SuspenseContext::new(cx);
+    let context = SuspenseContext::new();
 
     // provide this SuspenseContext to any resources below it
-    provide_context(cx, context);
+    provide_context( context);
 
     let orig_child = Rc::new(children);
 
     let before_me = HydrationCtx::peek();
     let current_id = HydrationCtx::next_component();
-    #[cfg(any(feature = "csr", feature = "hydrate"))]
-    let prev_disposer = Rc::new(RefCell::new(None::<ScopeDisposer>));
 
     let child = DynChild::new({
         #[cfg(not(any(feature = "csr", feature = "hydrate")))]
@@ -85,23 +83,16 @@ where
         move || {
             cfg_if! {
                 if #[cfg(any(feature = "csr", feature = "hydrate"))] {
-                    if let Some(disposer) = prev_disposer.take() {
-                        disposer.dispose();
-                    }
-                    let (view, disposer) =
-                        cx.run_child_scope(|cx| if context.ready() {
-                        Fragment::lazy(Box::new(|| vec![orig_child(cx).into_view(cx)])).into_view(cx)
+                    if context.ready() {
+                        Fragment::lazy(Box::new(|| vec![orig_child().into_view()])).into_view()
                     } else {
-                        Fragment::lazy(Box::new(|| vec![fallback().into_view(cx)])).into_view(cx)
-                    });
-                    *prev_disposer.borrow_mut() = Some(disposer);
-                    view
-
+                        Fragment::lazy(Box::new(|| vec![fallback().into_view()])).into_view()
+                    }
                 } else {
                     use leptos_reactive::signal_prelude::*;
 
                     // run the child; we'll probably throw this away, but it will register resource reads
-                    let child = orig_child(cx).into_view(cx);
+                    let child = orig_child().into_view();
                     let after_original_child = HydrationCtx::id();
 
                     let initial = {
@@ -123,10 +114,10 @@ where
                                     move || {
                                         HydrationCtx::continue_from(current_id.clone());
                                         Fragment::lazy(Box::new(move || {
-                                            vec![DynChild::new(move || orig_child(cx)).into_view(cx)]
+                                            vec![DynChild::new(move || orig_child()).into_view()]
                                         }))
-                                        .into_view(cx)
-                                        .render_to_string(cx)
+                                        .into_view()
+                                        .render_to_string()
                                         .to_string()
                                     }
                                 },
@@ -136,16 +127,16 @@ where
                                     move || {
                                         HydrationCtx::continue_from(current_id.clone());
                                         Fragment::lazy(Box::new(move || {
-                                            vec![DynChild::new(move || orig_child(cx)).into_view(cx)]
+                                            vec![DynChild::new(move || orig_child()).into_view()]
                                         }))
-                                        .into_view(cx)
-                                        .into_stream_chunks(cx)
+                                        .into_view()
+                                        .into_stream_chunks()
                                     }
                                 },
                             );
 
                             // return the fallback for now, wrapped in fragment identifier
-                            fallback().into_view(cx)
+                            fallback().into_view()
                         }
                     };
 
@@ -155,7 +146,7 @@ where
             }
         }
     })
-    .into_view(cx);
+    .into_view();
     let core_component = match child {
         leptos_dom::View::CoreComponent(repr) => repr,
         _ => unreachable!(),

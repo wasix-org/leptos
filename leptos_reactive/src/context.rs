@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-use crate::{runtime::with_runtime, Scope};
+use crate::{runtime::with_runtime,Runtime, Scope};
 use std::any::{Any, TypeId};
 
 /// Provides a context value of type `T` to the current reactive [`Scope`](crate::Scope)
@@ -52,13 +52,13 @@ use std::any::{Any, TypeId};
     instrument(level = "info", skip_all,)
 )]
 #[track_caller]
-pub fn provide_context<T>(cx: Scope, value: T)
+pub fn provide_context<T>(value: T)
 where
     T: Clone + 'static,
 {
     let id = value.type_id();
 
-    _ = with_runtime(cx.runtime, |runtime| {
+    _ = with_runtime(Runtime::current(), |runtime| {
         let mut contexts = runtime.contexts.borrow_mut();
         let owner = runtime.owner.get();
         if let Some(owner) = owner {
@@ -128,12 +128,12 @@ where
     any(debug_assertions, feature = "ssr"),
     instrument(level = "info", skip_all,)
 )]
-pub fn use_context<T>(cx: Scope) -> Option<T>
+pub fn use_context<T>() -> Option<T>
 where
     T: Clone + 'static,
 {
     let ty = TypeId::of::<T>();
-    with_runtime(cx.runtime, |runtime| {
+    with_runtime(Runtime::current(), |runtime| {
         let owner = runtime.owner.get();
         if let Some(owner) = owner {
             runtime.get_context(owner, ty)
@@ -196,11 +196,11 @@ where
 ///     todo!()
 /// }
 /// ```
-pub fn expect_context<T>(cx: Scope) -> T
+pub fn expect_context<T>() -> T
 where
     T: Clone + 'static,
 {
-    use_context(cx).unwrap_or_else(|| {
+    use_context().unwrap_or_else(|| {
         panic!(
             "context of type {:?} to be present",
             std::any::type_name::<T>()

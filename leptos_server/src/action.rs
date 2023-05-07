@@ -19,7 +19,7 @@ use std::{future::Future, pin::Pin, rc::Rc};
 ///     // return a task id
 ///     42
 /// }
-/// let save_data = create_action(cx, |task: &String| {
+/// let save_data = create_action(|task: &String| {
 ///   // `task` is given as `&String` because its value is available in `input`
 ///   send_new_todo_to_api(task.clone())
 /// });
@@ -65,17 +65,17 @@ use std::{future::Future, pin::Pin, rc::Rc};
 /// # use leptos::*;
 /// # run_scope(create_runtime(), |cx| {
 /// // if there's a single argument, just use that
-/// let action1 = create_action(cx, |input: &String| {
+/// let action1 = create_action(|input: &String| {
 ///     let input = input.clone();
 ///     async move { todo!() }
 /// });
 ///
 /// // if there are no arguments, use the unit type `()`
-/// let action2 = create_action(cx, |input: &()| async { todo!() });
+/// let action2 = create_action(|input: &()| async { todo!() });
 ///
 /// // if there are multiple arguments, use a tuple
 /// let action3 =
-///     create_action(cx, |input: &(usize, String)| async { todo!() });
+///     create_action(|input: &(usize, String)| async { todo!() });
 /// # });
 /// ```
 pub struct Action<I, O>(StoredValue<ActionState<I, O>>)
@@ -242,7 +242,7 @@ where
 ///     // return a task id
 ///     42
 /// }
-/// let save_data = create_action(cx, |task: &String| {
+/// let save_data = create_action(|task: &String| {
 ///   // `task` is given as `&String` because its value is available in `input`
 ///   send_new_todo_to_api(task.clone())
 /// });
@@ -288,41 +288,40 @@ where
 /// # use leptos::*;
 /// # run_scope(create_runtime(), |cx| {
 /// // if there's a single argument, just use that
-/// let action1 = create_action(cx, |input: &String| {
+/// let action1 = create_action(|input: &String| {
 ///     let input = input.clone();
 ///     async move { todo!() }
 /// });
 ///
 /// // if there are no arguments, use the unit type `()`
-/// let action2 = create_action(cx, |input: &()| async { todo!() });
+/// let action2 = create_action(|input: &()| async { todo!() });
 ///
 /// // if there are multiple arguments, use a tuple
 /// let action3 =
-///     create_action(cx, |input: &(usize, String)| async { todo!() });
+///     create_action(|input: &(usize, String)| async { todo!() });
 /// # });
 /// ```
 #[cfg_attr(
     any(debug_assertions, feature = "ssr"),
     tracing::instrument(level = "trace", skip_all,)
 )]
-pub fn create_action<I, O, F, Fu>(cx: Scope, action_fn: F) -> Action<I, O>
+pub fn create_action<I, O, F, Fu>(action_fn: F) -> Action<I, O>
 where
     I: 'static,
     O: 'static,
     F: Fn(&I) -> Fu + 'static,
     Fu: Future<Output = O> + 'static,
 {
-    let version = create_rw_signal(cx, 0);
-    let input = create_rw_signal(cx, None);
-    let value = create_rw_signal(cx, None);
-    let pending = create_rw_signal(cx, false);
+    let version = create_rw_signal(0);
+    let input = create_rw_signal(None);
+    let value = create_rw_signal(None);
+    let pending = create_rw_signal(false);
     let action_fn = Rc::new(move |input: &I| {
         let fut = action_fn(input);
         Box::pin(fut) as Pin<Box<dyn Future<Output = O>>>
     });
 
     Action(store_value(
-        cx,
         ActionState {
             version,
             url: None,
@@ -362,5 +361,5 @@ where
     let c = move |args: &S| S::call_fn(args.clone(), cx);
     #[cfg(not(feature = "ssr"))]
     let c = move |args: &S| S::call_fn_client(args.clone(), cx);
-    create_action(cx, c).using_server_fn::<S>()
+    create_action(c).using_server_fn::<S>()
 }

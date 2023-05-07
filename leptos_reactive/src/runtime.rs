@@ -5,7 +5,7 @@ use crate::{
     AnyComputation, AnyResource, Effect, Memo, MemoState, ReadSignal,
     ResourceId, ResourceState, RwSignal, Scope, ScopeDisposer, ScopeId,
     ScopeProperty, SerializableResource, StoredValueId, Trigger,
-    UnserializableResource, WriteSignal,
+    UnserializableResource, WriteSignal, SpecialNonReactiveZone,
 };
 use cfg_if::cfg_if;
 use core::hash::BuildHasherDefault;
@@ -33,6 +33,8 @@ cfg_if! {
     } else {
         thread_local! {
             pub(crate) static RUNTIMES: RefCell<SlotMap<RuntimeId, Runtime>> = Default::default();
+
+            pub(crate) static CURRENT_RUNTIME: Cell<Option<RuntimeId>> = Default::default();
         }
     }
 }
@@ -72,6 +74,23 @@ pub(crate) struct Runtime {
 // In terms of concept and algorithm, this reactive-system implementation
 // is significantly inspired by Reactively (https://github.com/modderme123/reactively)
 impl Runtime {
+    #[inline(always)]
+    pub(crate) fn current() -> RuntimeId {
+        cfg_if! {
+            if #[cfg(any(feature = "csr", feature = "hydrate"))] {
+                Default::default()
+            } else {
+                CURRENT_RUNTIME.with(|id| id.get()).unwrap_or_default()
+            }
+        }
+    }
+
+    #[cfg(not(any(feature = "csr", feature = "hydrate")))]
+    #[inline(always)]
+    pub(crate) fn set_runtime(id: Option<RuntimeId>) {
+         CURRENT_RUNTIME.with(|curr| curr.set(id))
+    }
+
     pub(crate) fn update_if_necessary(&self, node_id: NodeId) {
         if self.current_state(node_id) == ReactiveNodeState::Check {
             let sources = {
@@ -473,6 +492,21 @@ impl Runtime {
                 .and_then(|parent| self.get_context(*parent, ty)),
         }
     }
+
+    #[cfg_attr(
+        any(debug_assertions, features = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
+    #[track_caller]
+    pub(crate) fn push_scope_property(&self, prop: ScopeProperty) {
+        #[cfg(debug_assertions)]
+        let defined_at = std::panic::Location::caller();
+        self.register_property(
+            prop,
+            #[cfg(debug_assertions)]
+            defined_at,
+        );
+    }
 }
 
 impl Debug for Runtime {
@@ -604,11 +638,13 @@ impl RuntimeId {
     #[inline(always)] // only because it's placed here to fit in with the other create methods
     pub(crate) fn create_trigger(self) -> Trigger {
         let id = with_runtime(self, |runtime| {
-            runtime.nodes.borrow_mut().insert(ReactiveNode {
+            let id = runtime.nodes.borrow_mut().insert(ReactiveNode {
                 value: None,
                 state: ReactiveNodeState::Clean,
                 node_type: ReactiveNodeType::Trigger,
-            })
+            });
+            runtime.push_scope_property(ScopeProperty::Trigger(id));
+            id
         })
         .expect(
             "tried to create a trigger in a runtime that has been disposed",
@@ -627,11 +663,13 @@ impl RuntimeId {
         value: Rc<RefCell<dyn Any>>,
     ) -> NodeId {
         with_runtime(self, |runtime| {
-            runtime.nodes.borrow_mut().insert(ReactiveNode {
+            let id = runtime.nodes.borrow_mut().insert(ReactiveNode {
                 value: Some(value),
                 state: ReactiveNodeState::Clean,
                 node_type: ReactiveNodeType::Signal,
-            })
+            });
+            runtime.push_scope_property(ScopeProperty::Signal(id));
+            id
         })
         .expect("tried to create a signal in a runtime that has been disposed")
     }
@@ -702,7 +740,7 @@ impl RuntimeId {
                     f: Rc::clone(&effect),
                 },
             });
-
+            runtime.push_scope_property(ScopeProperty::Effect(id));
             id
         })
         .expect("tried to create an effect in a runtime that has been disposed")
@@ -714,13 +752,15 @@ impl RuntimeId {
         computation: Rc<dyn AnyComputation>,
     ) -> NodeId {
         with_runtime(self, |runtime| {
-            runtime.nodes.borrow_mut().insert(ReactiveNode {
+            let id = runtime.nodes.borrow_mut().insert(ReactiveNode {
                 value: Some(value),
                 // memos are lazy, so are dirty when created
                 // will be run the first time we ask for it
                 state: ReactiveNodeState::Dirty,
                 node_type: ReactiveNodeType::Memo { f: computation },
-            })
+            });
+            runtime.push_scope_property(ScopeProperty::Effect(id));
+            id
         })
         .expect("tried to create a memo in a runtime that has been disposed")
     }
@@ -857,12 +897,11 @@ impl Runtime {
 
     pub(crate) fn serialization_resolvers(
         &self,
-        cx: Scope,
     ) -> FuturesUnordered<PinnedFuture<(ResourceId, String)>> {
         let f = FuturesUnordered::new();
         for (id, resource) in self.resources.borrow().iter() {
             if let AnyResource::Serializable(resource) = resource {
-                f.push(resource.to_serialization_resolver(cx, id));
+                f.push(resource.to_serialization_resolver(id));
             }
         }
         f
@@ -889,5 +928,70 @@ impl Eq for Runtime {}
 impl std::hash::Hash for Runtime {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::ptr::hash(&self, state);
+    }
+}
+
+    /// Suspends reactive tracking while running the given function.
+    ///
+    /// This can be used to isolate parts of the reactive graph from one another.
+    ///
+    /// ```
+    /// # use leptos_reactive::*;
+    /// # run_scope(create_runtime(), |cx| {
+    /// let (a, set_a) = create_signal(cx, 0);
+    /// let (b, set_b) = create_signal(cx, 0);
+    /// let c = create_memo(cx, move |_| {
+    ///     // this memo will *only* update when `a` changes
+    ///     a() + cx.untrack(move || b())
+    /// });
+    ///
+    /// assert_eq!(c(), 0);
+    /// set_a(1);
+    /// assert_eq!(c(), 1);
+    /// set_b(1);
+    /// // hasn't updated, because we untracked before reading b
+    /// assert_eq!(c(), 1);
+    /// set_a(2);
+    /// assert_eq!(c(), 3);
+    ///
+    /// # });
+    /// ```
+    #[cfg_attr(
+        any(debug_assertions, features = "ssr"),
+        instrument(level = "trace", skip_all,)
+    )]
+    #[inline(always)]
+    pub fn untrack<T>(f: impl FnOnce() -> T) -> T {
+        let runtime_id = Runtime::current();
+        with_runtime(runtime_id, |runtime| {
+            let untracked_result;
+
+            SpecialNonReactiveZone::enter();
+
+            let prev_observer =
+                SetObserverOnDrop(runtime_id, runtime.observer.take());
+
+            untracked_result = f();
+
+            runtime.observer.set(prev_observer.1);
+            std::mem::forget(prev_observer); // avoid Drop
+
+            SpecialNonReactiveZone::exit();
+
+            untracked_result
+        })
+        .expect(
+            "tried to run untracked function in a runtime that has been \
+             disposed",
+        )
+    }
+
+    struct SetObserverOnDrop(RuntimeId, Option<NodeId>);
+
+impl Drop for SetObserverOnDrop {
+    fn drop(&mut self) {
+        _ = with_runtime(self.0, |rt| {
+            rt.observer.set(self.1);
+        });
     }
 }

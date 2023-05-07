@@ -229,7 +229,7 @@ impl View {
     #[tracing::instrument(level = "trace", skip_all)]
     pub fn into_stream_chunks(self, cx: Scope) -> VecDeque<StreamChunk> {
         let mut chunks = VecDeque::new();
-        self.into_stream_chunks_helper(cx, &mut chunks, false);
+        self.into_stream_chunks_helper(&mut chunks, false);
         chunks
     }
     #[tracing::instrument(level = "trace", skip_all)]
@@ -258,12 +258,12 @@ impl View {
                     let name = crate::ssr::to_kebab_case(&node.name);
                     chunks.push_back(StreamChunk::Sync(format!(r#"<!--hk={}|leptos-{name}-start-->"#, HydrationCtx::to_string(&node.id, false)).into()));
                     for child in node.children {
-                        child.into_stream_chunks_helper(cx, chunks, dont_escape_text);
+                        child.into_stream_chunks_helper(chunks, dont_escape_text);
                     }
                     chunks.push_back(StreamChunk::Sync(format!(r#"<!--hk={}|leptos-{name}-end-->"#, HydrationCtx::to_string(&node.id, true)).into()));
                   } else {
                     for child in node.children {
-                        child.into_stream_chunks_helper(cx, chunks, dont_escape_text);
+                        child.into_stream_chunks_helper(chunks, dont_escape_text);
                     }
                     chunks.push_back(StreamChunk::Sync(format!(r#"<!--hk={}-->"#, HydrationCtx::to_string(&node.id, true)).into()))
                   }

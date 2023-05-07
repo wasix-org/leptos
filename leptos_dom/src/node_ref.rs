@@ -75,14 +75,14 @@ pub struct NodeRef<T: ElementDescriptor + 'static>(
 pub fn create_node_ref<T: ElementDescriptor + 'static>(
     cx: Scope,
 ) -> NodeRef<T> {
-    NodeRef(create_rw_signal(cx, None))
+    NodeRef(create_rw_signal(None))
 }
 
 impl<T: ElementDescriptor + 'static> NodeRef<T> {
     /// Creates an empty reference.
     #[deprecated = "Use `create_node_ref` instead of `NodeRef::new()`."]
     pub fn new(cx: Scope) -> Self {
-        Self(create_rw_signal(cx, None))
+        Self(create_rw_signal(None))
     }
 
     /// Gets the element that is currently stored in the reference.
@@ -143,7 +143,7 @@ impl<T: ElementDescriptor + 'static> NodeRef<T> {
     {
         let f = Cell::new(Some(f));
 
-        create_effect(cx, move |_| {
+        create_effect(move |_| {
             if let Some(node_ref) = self.get() {
                 f.take().unwrap()(node_ref);
             }

@@ -164,7 +164,7 @@ macro_rules! generate_math_tags {
 
         #[$meta]
         pub fn [<$tag $(_ $second $(_ $third)?)? $($trailing_)?>](cx: Scope) -> HtmlElement<[<$tag:camel $($second:camel $($third:camel)?)?>]> {
-          HtmlElement::new(cx, [<$tag:camel $($second:camel $($third:camel)?)?>]::default())
+          HtmlElement::new([<$tag:camel $($second:camel $($third:camel)?)?>]::default())
         }
       )*
     }

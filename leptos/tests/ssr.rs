@@ -4,9 +4,9 @@ fn simple_ssr_test() {
     use leptos::*;
 
     _ = create_scope(create_runtime(), |cx| {
-        let (value, set_value) = create_signal(cx, 0);
+        let (value, set_value) = create_signal( 0);
         let rendered = view! {
-            cx,
+            
             <div>
                 <button on:click=move |_| set_value.update(|value| *value -= 1)>"-1"</button>
                 <span>"Value: " {move || value.get().to_string()} "!"</span>
@@ -15,7 +15,7 @@ fn simple_ssr_test() {
         };
 
         assert_eq!(
-            rendered.into_view(cx).render_to_string(cx),
+            rendered.into_view().render_to_string(),
             "<!--leptos-view|leptos-tests-ssr.rs-8|open--><div \
              id=\"_0-1\"><button id=\"_0-2\">-1</button><span \
              id=\"_0-3\">Value: \
@@ -33,10 +33,10 @@ fn ssr_test_with_components() {
     use leptos::*;
 
     #[component]
-    fn Counter(cx: Scope, initial_value: i32) -> impl IntoView {
-        let (value, set_value) = create_signal(cx, initial_value);
+    fn Counter( initial_value: i32) -> impl IntoView {
+        let (value, set_value) = create_signal( initial_value);
         view! {
-            cx,
+            
             <div>
                 <button on:click=move |_| set_value.update(|value| *value -= 1)>"-1"</button>
                 <span>"Value: " {move || value.get().to_string()} "!"</span>
@@ -47,7 +47,7 @@ fn ssr_test_with_components() {
 
     _ = create_scope(create_runtime(), |cx| {
         let rendered = view! {
-            cx,
+            
             <div class="counters">
                 <Counter initial_value=1/>
                 <Counter initial_value=2/>
@@ -55,7 +55,7 @@ fn ssr_test_with_components() {
         };
 
         assert_eq!(
-            rendered.into_view(cx).render_to_string(cx),
+            rendered.into_view().render_to_string(),
             "<!--leptos-view|leptos-tests-ssr.rs-49|open--><div id=\"_0-1\" \
              class=\"counters\"><!--hk=_0-1-0o|leptos-counter-start--><!\
              --leptos-view|leptos-tests-ssr.rs-38|open--><div \
@@ -85,10 +85,10 @@ fn ssr_test_with_snake_case_components() {
     use leptos::*;
 
     #[component]
-    fn snake_case_counter(cx: Scope, initial_value: i32) -> impl IntoView {
-        let (value, set_value) = create_signal(cx, initial_value);
+    fn snake_case_counter( initial_value: i32) -> impl IntoView {
+        let (value, set_value) = create_signal( initial_value);
         view! {
-            cx,
+            
             <div>
                 <button on:click=move |_| set_value.update(|value| *value -= 1)>"-1"</button>
                 <span>"Value: " {move || value.get().to_string()} "!"</span>
@@ -99,7 +99,7 @@ fn ssr_test_with_snake_case_components() {
 
     _ = create_scope(create_runtime(), |cx| {
         let rendered = view! {
-            cx,
+            
             <div class="counters">
                 <SnakeCaseCounter initial_value=1/>
                 <SnakeCaseCounter initial_value=2/>
@@ -107,7 +107,7 @@ fn ssr_test_with_snake_case_components() {
         };
 
         assert_eq!(
-            rendered.into_view(cx).render_to_string(cx),
+            rendered.into_view().render_to_string(),
             "<!--leptos-view|leptos-tests-ssr.rs-101|open--><div id=\"_0-1\" \
              class=\"counters\"><!\
              --hk=_0-1-0o|leptos-snake-case-counter-start--><!\
@@ -138,14 +138,14 @@ fn test_classes() {
     use leptos::*;
 
     _ = create_scope(create_runtime(), |cx| {
-        let (value, _set_value) = create_signal(cx, 5);
+        let (value, _set_value) = create_signal( 5);
         let rendered = view! {
-            cx,
+            
             <div class="my big" class:a={move || value.get() > 10} class:red=true class:car={move || value.get() > 1}></div>
         };
 
         assert_eq!(
-            rendered.into_view(cx).render_to_string(cx),
+            rendered.into_view().render_to_string(),
             "<!--leptos-view|leptos-tests-ssr.rs-142|open--><div id=\"_0-1\" \
              class=\"my big  red \
              car\"></div><!--leptos-view|leptos-tests-ssr.rs-142|close-->"
@@ -159,17 +159,17 @@ fn ssr_with_styles() {
     use leptos::*;
 
     _ = create_scope(create_runtime(), |cx| {
-        let (_, set_value) = create_signal(cx, 0);
+        let (_, set_value) = create_signal( 0);
         let styles = "myclass";
         let rendered = view! {
-            cx, class = styles,
+             class = styles,
             <div>
                 <button class="btn" on:click=move |_| set_value.update(|value| *value -= 1)>"-1"</button>
             </div>
         };
 
         assert_eq!(
-            rendered.into_view(cx).render_to_string(cx),
+            rendered.into_view().render_to_string(),
             "<!--leptos-view|leptos-tests-ssr.rs-164|open--><div id=\"_0-1\" \
              class=\" myclass\"><button id=\"_0-2\" class=\"btn \
              myclass\">-1</button></div><!--leptos-view|leptos-tests-ssr.\
@@ -184,14 +184,14 @@ fn ssr_option() {
     use leptos::*;
 
     _ = create_scope(create_runtime(), |cx| {
-        let (_, _) = create_signal(cx, 0);
+        let (_, _) = create_signal( 0);
         let rendered = view! {
-            cx,
+            
             <option/>
         };
 
         assert_eq!(
-            rendered.into_view(cx).render_to_string(cx),
+            rendered.into_view().render_to_string(),
             "<!--leptos-view|leptos-tests-ssr.rs-188|open--><option \
              id=\"_0-1\"></option><!--leptos-view|leptos-tests-ssr.\
              rs-188|close-->"

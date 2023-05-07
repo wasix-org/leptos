@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 use crate::{
-    create_isomorphic_effect, create_signal, ReadSignal, Scope, SignalUpdate,
+    create_isomorphic_effect, create_signal, ReadSignal, SignalUpdate,
     WriteSignal,
 };
 use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
@@ -48,13 +48,12 @@ use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 /// ```
 #[inline(always)]
 pub fn create_selector<T>(
-    cx: Scope,
     source: impl Fn() -> T + Clone + 'static,
 ) -> impl Fn(T) -> bool + Clone
 where
     T: PartialEq + Eq + Clone + Hash + 'static,
 {
-    create_selector_with_fn(cx, source, PartialEq::eq)
+    create_selector_with_fn( source, PartialEq::eq)
 }
 
 /// Creates a conditional signal that only notifies subscribers when a change
@@ -64,7 +63,6 @@ where
 /// in certain situations (e.g., “set the class `selected` if `selected() == this_row_index`)
 /// because it reduces them from `O(n)` to `O(1)`.
 pub fn create_selector_with_fn<T>(
-    cx: Scope,
     source: impl Fn() -> T + Clone + 'static,
     f: impl Fn(&T, &T) -> bool + Clone + 'static,
 ) -> impl Fn(T) -> bool + Clone
@@ -77,7 +75,7 @@ where
     > = Rc::new(RefCell::new(HashMap::new()));
     let v = Rc::new(RefCell::new(None));
 
-    create_isomorphic_effect(cx, {
+    create_isomorphic_effect({
         let subs = Rc::clone(&subs);
         let f = f.clone();
         let v = Rc::clone(&v);
@@ -102,7 +100,7 @@ where
         let mut subs = subs.borrow_mut();
         let (read, _) = subs
             .entry(key.clone())
-            .or_insert_with(|| create_signal(cx, false));
+            .or_insert_with(|| create_signal(false));
         _ = read.try_with(|n| *n);
         f(&key, v.borrow().as_ref().unwrap())
     }

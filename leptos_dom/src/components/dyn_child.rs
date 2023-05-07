@@ -162,11 +162,10 @@ where
         instrument(level = "info", name = "<DynChild />", skip_all)
     )]
     #[inline]
-    fn into_view(self, cx: Scope) -> View {
+    fn into_view(self) -> View {
         // concrete inner function
         #[inline(never)]
         fn create_dyn_view(
-            cx: Scope,
             component: DynChildRepr,
             child_fn: Box<dyn Fn() -> View>,
         ) -> DynChildRepr {
@@ -184,12 +183,11 @@ where
 
             #[cfg(all(target_arch = "wasm32", feature = "web"))]
             create_effect(
-                cx,
                 move |prev_run: Option<Option<web_sys::Node>>| {
                     #[cfg(debug_assertions)]
                     let _guard = span.enter();
 
-                    let new_child = child_fn().into_view(cx);
+                    let new_child = child_fn().into_view();
 
                     let mut child_borrow = child.borrow_mut();
 
@@ -343,7 +341,7 @@ where
 
             #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
             {
-                let new_child = child_fn().into_view(cx);
+                let new_child = child_fn().into_view();
 
                 **child.borrow_mut() = Some(new_child);
             }
@@ -356,9 +354,8 @@ where
 
         let component = DynChildRepr::new_with_id(id);
         let component = create_dyn_view(
-            cx,
             component,
-            Box::new(move || child_fn().into_view(cx)),
+            Box::new(move || child_fn().into_view()),
         );
 
         View::CoreComponent(crate::CoreComponent::DynChild(component))

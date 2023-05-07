@@ -280,7 +280,7 @@ pub trait SignalStream<T> {
     // positions are stabilized, and also so any underlying
     // changes are non-breaking
     #[track_caller]
-    fn to_stream(&self, cx: Scope) -> Pin<Box<dyn Stream<Item = T>>>;
+    fn to_stream(&self) -> Pin<Box<dyn Stream<Item = T>>>;
 }
 
 /// This trait allows disposing a signal before its [`Scope`] has been disposed.
@@ -337,19 +337,16 @@ pub trait SignalDispose {
         level = "trace",
         skip_all,
         fields(
-            scope = ?cx.id,
             ty = %std::any::type_name::<T>()
         )
     )
 )]
 #[track_caller]
 pub fn create_signal<T>(
-    cx: Scope,
+    
     value: T,
 ) -> (ReadSignal<T>, WriteSignal<T>) {
-    let s = cx.runtime.create_signal(value);
-    cx.push_scope_property(ScopeProperty::Signal(s.0.id));
-    s
+    Runtime::current().create_signal(value)
 }
 
 /// Creates a signal that always contains the most recent value emitted by a
@@ -364,26 +361,23 @@ pub fn create_signal<T>(
     instrument(
         level = "trace",
         skip_all,
-        fields(
-            scope = ?cx.id,
-        )
     )
 )]
 pub fn create_signal_from_stream<T>(
-    cx: Scope,
+    
     #[allow(unused_mut)] // allowed because needed for SSR
     mut stream: impl Stream<Item = T> + Unpin + 'static,
 ) -> ReadSignal<Option<T>> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "ssr")] {
             _ = stream;
-            let (read, _) = create_signal(cx, None);
+            let (read, _) = create_signal(None);
             read
         } else {
             use crate::spawn_local;
             use futures::StreamExt;
 
-            let (read, write) = create_signal(cx, None);
+            let (read, write) = create_signal(None);
             spawn_local(async move {
                 while let Some(value) = stream.next().await {
                     write.set(Some(value));
@@ -705,16 +699,16 @@ impl<T: Clone> SignalStream<T> for ReadSignal<T> {
             )
         )
     )]
-    fn to_stream(&self, cx: Scope) -> Pin<Box<dyn Stream<Item = T>>> {
+    fn to_stream(&self) -> Pin<Box<dyn Stream<Item = T>>> {
         let (tx, rx) = futures::channel::mpsc::unbounded();
 
         let close_channel = tx.clone();
 
-        on_cleanup(cx, move || close_channel.close_channel());
+        on_cleanup(move || close_channel.close_channel());
 
         let this = *self;
 
-        create_effect(cx, move |_| {
+        create_effect(move |_| {
             let _ = tx.unbounded_send(this.get());
         });
 
@@ -1079,10 +1073,8 @@ impl<T> Copy for WriteSignal<T> {}
     )
 )]
 #[track_caller]
-pub fn create_rw_signal<T>(cx: Scope, value: T) -> RwSignal<T> {
-    let s = cx.runtime.create_rw_signal(value);
-    cx.push_scope_property(ScopeProperty::Signal(s.id));
-    s
+pub fn create_rw_signal<T>(value: T) -> RwSignal<T> {
+    Runtime::current().create_rw_signal(value)
 }
 
 /// A signal that combines the getter and setter into one value, rather than
@@ -1612,16 +1604,16 @@ impl<T> SignalSet<T> for RwSignal<T> {
 }
 
 impl<T: Clone> SignalStream<T> for RwSignal<T> {
-    fn to_stream(&self, cx: Scope) -> Pin<Box<dyn Stream<Item = T>>> {
+    fn to_stream(&self) -> Pin<Box<dyn Stream<Item = T>>> {
         let (tx, rx) = futures::channel::mpsc::unbounded();
 
         let close_channel = tx.clone();
 
-        on_cleanup(cx, move || close_channel.close_channel());
+        on_cleanup(move || close_channel.close_channel());
 
         let this = *self;
 
-        create_effect(cx, move |_| {
+        create_effect(move |_| {
             let _ = tx.unbounded_send(this.get());
         });
 
