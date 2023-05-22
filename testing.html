@@ -1,0 +1,355 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Testing</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="01_introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="02_getting_started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="view/index.html"><strong aria-hidden="true">3.</strong> Building User Interfaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="view/01_basic_component.html"><strong aria-hidden="true">3.1.</strong> A Basic Component</a></li><li class="chapter-item expanded "><a href="view/02_dynamic_attributes.html"><strong aria-hidden="true">3.2.</strong> Dynamic Attributes</a></li><li class="chapter-item expanded "><a href="view/03_components.html"><strong aria-hidden="true">3.3.</strong> Components and Props</a></li><li class="chapter-item expanded "><a href="view/04_iteration.html"><strong aria-hidden="true">3.4.</strong> Iteration</a></li><li class="chapter-item expanded "><a href="view/05_forms.html"><strong aria-hidden="true">3.5.</strong> Forms and Inputs</a></li><li class="chapter-item expanded "><a href="view/06_control_flow.html"><strong aria-hidden="true">3.6.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="view/07_errors.html"><strong aria-hidden="true">3.7.</strong> Error Handling</a></li><li class="chapter-item expanded "><a href="view/08_parent_child.html"><strong aria-hidden="true">3.8.</strong> Parent-Child Communication</a></li><li class="chapter-item expanded "><a href="view/09_component_children.html"><strong aria-hidden="true">3.9.</strong> Passing Children to Components</a></li></ol></li><li class="chapter-item expanded "><a href="interlude_functions.html"><strong aria-hidden="true">4.</strong> Interlude: Reactivity and Functions</a></li><li class="chapter-item expanded "><a href="testing.html" class="active"><strong aria-hidden="true">5.</strong> Testing</a></li><li class="chapter-item expanded "><a href="async/index.html"><strong aria-hidden="true">6.</strong> Async</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="async/10_resources.html"><strong aria-hidden="true">6.1.</strong> Loading Data with Resources</a></li><li class="chapter-item expanded "><a href="async/11_suspense.html"><strong aria-hidden="true">6.2.</strong> Suspense</a></li><li class="chapter-item expanded "><a href="async/12_transition.html"><strong aria-hidden="true">6.3.</strong> Transition</a></li><li class="chapter-item expanded "><a href="async/13_actions.html"><strong aria-hidden="true">6.4.</strong> Actions</a></li></ol></li><li class="chapter-item expanded "><a href="interlude_projecting_children.html"><strong aria-hidden="true">7.</strong> Interlude: Projecting Children</a></li><li class="chapter-item expanded "><a href="14_create_effect.html"><strong aria-hidden="true">8.</strong> Responding to Changes with create_effect</a></li><li class="chapter-item expanded "><a href="15_global_state.html"><strong aria-hidden="true">9.</strong> Global State Management</a></li><li class="chapter-item expanded "><a href="router/index.html"><strong aria-hidden="true">10.</strong> Router</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="router/16_routes.html"><strong aria-hidden="true">10.1.</strong> Defining &lt;Routes/&gt;</a></li><li class="chapter-item expanded "><a href="router/17_nested_routing.html"><strong aria-hidden="true">10.2.</strong> Nested Routing</a></li><li class="chapter-item expanded "><a href="router/18_params_and_queries.html"><strong aria-hidden="true">10.3.</strong> Params and Queries</a></li><li class="chapter-item expanded "><a href="router/19_a.html"><strong aria-hidden="true">10.4.</strong> &lt;A/&gt;</a></li><li class="chapter-item expanded "><a href="router/20_form.html"><strong aria-hidden="true">10.5.</strong> &lt;Form/&gt;</a></li></ol></li><li class="chapter-item expanded "><a href="interlude_styling.html"><strong aria-hidden="true">11.</strong> Interlude: Styling</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.</strong> Metadata</div></li><li class="chapter-item expanded "><a href="ssr/index.html"><strong aria-hidden="true">13.</strong> Server Side Rendering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ssr/21_cargo_leptos.html"><strong aria-hidden="true">13.1.</strong> cargo-leptos</a></li><li class="chapter-item expanded "><a href="ssr/22_life_cycle.html"><strong aria-hidden="true">13.2.</strong> The Life of a Page Load</a></li><li class="chapter-item expanded "><a href="ssr/23_ssr_modes.html"><strong aria-hidden="true">13.3.</strong> Async Rendering and SSR “Modes”</a></li><li class="chapter-item expanded "><a href="ssr/24_hydration_bugs.html"><strong aria-hidden="true">13.4.</strong> Hydration Bugs</a></li></ol></li><li class="chapter-item expanded "><a href="server/index.html"><strong aria-hidden="true">14.</strong> Working with the Server</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="server/25_server_functions.html"><strong aria-hidden="true">14.1.</strong> Server Functions</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.2.</strong> Request/Response</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.</strong> Extractors</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.1.</strong> Axum</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.2.</strong> Actix</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.4.</strong> Headers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.5.</strong> Cookies</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.</strong> Building Full-Stack Apps</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">15.1.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.2.</strong> Forms</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.3.</strong> &lt;ActionForm/&gt;s</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.4.</strong> Turning off WebAssembly: Progressive Enhancement and Graceful Degradation</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">16.</strong> Advanced Reactivity</div></li><li class="chapter-item expanded "><a href="appendix_binary_size.html"><strong aria-hidden="true">17.</strong> Appendix: Optimizing WASM Binary Size</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="testing-your-components"><a class="header" href="#testing-your-components">Testing Your Components</a></h1>
+<p>Testing user interfaces can be relatively tricky, but really important. This article
+will discuss a couple principles and approaches for testing a Leptos app.</p>
+<h2 id="1-test-business-logic-with-ordinary-rust-tests"><a class="header" href="#1-test-business-logic-with-ordinary-rust-tests">1. Test business logic with ordinary Rust tests</a></h2>
+<p>In many cases, it makes sense to pull the logic out of your components and test
+it separately. For some simple components, there’s no particular logic to test, but
+for many it’s worth using a testable wrapping type and implementing the logic in
+ordinary Rust <code>impl</code> blocks.</p>
+<p>For example, instead of embedding logic in a component directly like this:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+pub fn TodoApp(cx: Scope) -&gt; impl IntoView {
+    let (todos, set_todos) = create_signal(cx, vec![Todo { /* ... */ }]);
+    // ⚠️ this is hard to test because it's embedded in the component
+    let num_remaining = move || todos.with(|todos| {
+        todos.iter().filter(|todo| !todo.completed).sum()
+    });
+}
+<span class="boring">}</span></code></pre></pre>
+<p>You could pull that logic out into a separate data structure and test it:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct Todos(Vec&lt;Todo&gt;);
+
+impl Todos {
+    pub fn num_remaining(&amp;self) -&gt; usize {
+        todos.iter().filter(|todo| !todo.completed).sum()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_remaining {
+        // ...
+    }
+}
+
+#[component]
+pub fn TodoApp(cx: Scope) -&gt; impl IntoView {
+    let (todos, set_todos) = create_signal(cx, Todos(vec![Todo { /* ... */ }]));
+    // ✅ this has a test associated with it
+    let num_remaining = move || todos.with(Todos::num_remaining);
+}
+<span class="boring">}</span></code></pre></pre>
+<p>In general, the less of your logic is wrapped into your components themselves, the
+more idiomatic your code will feel and the easier it will be to test.</p>
+<h2 id="2-test-components-with-wasm-bindgen-test"><a class="header" href="#2-test-components-with-wasm-bindgen-test">2. Test components with <code>wasm-bindgen-test</code></a></h2>
+<p><a href="https://crates.io/crates/wasm-bindgen-test"><code>wasm-bindgen-test</code></a> is a great utility
+for integrating or end-to-end testing WebAssembly apps in a headless browser.</p>
+<p>To use this testing utility, you need to add <code>wasm-bindgen-test</code> to your <code>Cargo.toml</code>:</p>
+<pre><code class="language-toml">[dev-dependencies]
+wasm-bindgen-test = &quot;0.3.0&quot;
+</code></pre>
+<p>You should create tests in a separate <code>tests</code> directory. You can then run your tests in the browser of your choice:</p>
+<pre><code class="language-bash">wasm-pack test --firefox
+</code></pre>
+<blockquote>
+<p>To see the full setup, check out the tests for the <a href="https://github.com/leptos-rs/leptos/tree/main/examples/counter"><code>counter</code></a> example.</p>
+</blockquote>
+<h3 id="writing-your-tests"><a class="header" href="#writing-your-tests">Writing Your Tests</a></h3>
+<p>Most tests will involve some combination of vanilla DOM manipulation and comparison to a <code>view</code>. For example, here’s a test <a href="https://github.com/leptos-rs/leptos/blob/main/examples/counter/tests/mod.rs">for the
+<code>counter</code> example</a>.</p>
+<p>First, we set up the testing environment.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use wasm_bindgen_test::*;
+use counter::*;
+use leptos::*;
+use web_sys::HtmlElement;
+
+// tell the test runner to run tests in the browser
+wasm_bindgen_test_configure!(run_in_browser);
+<span class="boring">}</span></code></pre></pre>
+<p>I’m going to create a simpler wrapper for each test case, and mount it there.
+This makes it easy to encapsulate the test results.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// like marking a regular test with #[test]
+#[wasm_bindgen_test]
+fn clear() {
+    let document = leptos::document();
+    let test_wrapper = document.create_element(&quot;section&quot;).unwrap();
+    document.body().unwrap().append_child(&amp;test_wrapper);
+
+    // start by rendering our counter and mounting it to the DOM
+    // note that we start at the initial value of 10
+    mount_to(
+        test_wrapper.clone().unchecked_into(),
+        |cx| view! { cx, &lt;SimpleCounter initial_value=10 step=1/&gt; },
+    );
+}
+<span class="boring">}</span></code></pre></pre>
+<p>We’ll use some manual DOM operations to grab the <code>&lt;div&gt;</code> that wraps
+the whole component, as well as the <code>clear</code> button.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// now we extract the buttons by iterating over the DOM
+// this would be easier if they had IDs
+let div = test_wrapper.query_selector(&quot;div&quot;).unwrap().unwrap();
+let clear = test_wrapper
+    .query_selector(&quot;button&quot;)
+    .unwrap()
+    .unwrap()
+    .unchecked_into::&lt;web_sys::HtmlElement&gt;();
+<span class="boring">}</span></code></pre></pre>
+<p>Now we can use ordinary DOM APIs to simulate user interaction.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// now let's click the `clear` button
+clear.click();
+<span class="boring">}</span></code></pre></pre>
+<p>You can test individual DOM element attributes or text node values. Sometimes
+I like to test the whole view at once. We can do this by testing the element’s
+<code>outerHTML</code> against our expectations.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>assert_eq!(
+    div.outer_html(),
+    // here we spawn a mini reactive system to render the test case
+    run_scope(create_runtime(), |cx| {
+        // it's as if we're creating it with a value of 0, right?
+        let (value, set_value) = create_signal(cx, 0);
+
+        // we can remove the event listeners because they're not rendered to HTML
+        view! { cx,
+            &lt;div&gt;
+                &lt;button&gt;&quot;Clear&quot;&lt;/button&gt;
+                &lt;button&gt;&quot;-1&quot;&lt;/button&gt;
+                &lt;span&gt;&quot;Value: &quot; {value} &quot;!&quot;&lt;/span&gt;
+                &lt;button&gt;&quot;+1&quot;&lt;/button&gt;
+            &lt;/div&gt;
+        }
+        // the view returned an HtmlElement&lt;Div&gt;, which is a smart pointer for
+        // a DOM element. So we can still just call .outer_html()
+        .outer_html()
+    })
+);
+<span class="boring">}</span></code></pre></pre>
+<p>That test involved us manually replicating the <code>view</code> that’s inside the component.
+There's actually an easier way to do this... We can just test against a <code>&lt;SimpleCounter/&gt;</code>
+with the initial value <code>0</code>. This is where our wrapping element comes in: I’ll just test
+the wrapper’s <code>innerHTML</code> against another comparison case.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>assert_eq!(test_wrapper.inner_html(), {
+    let comparison_wrapper = document.create_element(&quot;section&quot;).unwrap();
+    leptos::mount_to(
+        comparison_wrapper.clone().unchecked_into(),
+        |cx| view! { cx, &lt;SimpleCounter initial_value=0 step=1/&gt;},
+    );
+    comparison_wrapper.inner_html()
+});
+<span class="boring">}</span></code></pre></pre>
+<p>This is only a very limited introduction to testing. But I hope it’s useful as you begin to build applications.</p>
+<blockquote>
+<p>For more, see <a href="https://rustwasm.github.io/wasm-bindgen/wasm-bindgen-test/index.html#testing-on-wasm32-unknown-unknown-with-wasm-bindgen-test">the testing section of the <code>wasm-bindgen</code> guide</a>.</p>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="interlude_functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="async/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="interlude_functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="async/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

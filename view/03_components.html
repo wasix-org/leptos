@@ -1,0 +1,483 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Components and Props</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../01_introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../02_getting_started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../view/index.html"><strong aria-hidden="true">3.</strong> Building User Interfaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../view/01_basic_component.html"><strong aria-hidden="true">3.1.</strong> A Basic Component</a></li><li class="chapter-item expanded "><a href="../view/02_dynamic_attributes.html"><strong aria-hidden="true">3.2.</strong> Dynamic Attributes</a></li><li class="chapter-item expanded "><a href="../view/03_components.html" class="active"><strong aria-hidden="true">3.3.</strong> Components and Props</a></li><li class="chapter-item expanded "><a href="../view/04_iteration.html"><strong aria-hidden="true">3.4.</strong> Iteration</a></li><li class="chapter-item expanded "><a href="../view/05_forms.html"><strong aria-hidden="true">3.5.</strong> Forms and Inputs</a></li><li class="chapter-item expanded "><a href="../view/06_control_flow.html"><strong aria-hidden="true">3.6.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="../view/07_errors.html"><strong aria-hidden="true">3.7.</strong> Error Handling</a></li><li class="chapter-item expanded "><a href="../view/08_parent_child.html"><strong aria-hidden="true">3.8.</strong> Parent-Child Communication</a></li><li class="chapter-item expanded "><a href="../view/09_component_children.html"><strong aria-hidden="true">3.9.</strong> Passing Children to Components</a></li></ol></li><li class="chapter-item expanded "><a href="../interlude_functions.html"><strong aria-hidden="true">4.</strong> Interlude: Reactivity and Functions</a></li><li class="chapter-item expanded "><a href="../testing.html"><strong aria-hidden="true">5.</strong> Testing</a></li><li class="chapter-item expanded "><a href="../async/index.html"><strong aria-hidden="true">6.</strong> Async</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../async/10_resources.html"><strong aria-hidden="true">6.1.</strong> Loading Data with Resources</a></li><li class="chapter-item expanded "><a href="../async/11_suspense.html"><strong aria-hidden="true">6.2.</strong> Suspense</a></li><li class="chapter-item expanded "><a href="../async/12_transition.html"><strong aria-hidden="true">6.3.</strong> Transition</a></li><li class="chapter-item expanded "><a href="../async/13_actions.html"><strong aria-hidden="true">6.4.</strong> Actions</a></li></ol></li><li class="chapter-item expanded "><a href="../interlude_projecting_children.html"><strong aria-hidden="true">7.</strong> Interlude: Projecting Children</a></li><li class="chapter-item expanded "><a href="../14_create_effect.html"><strong aria-hidden="true">8.</strong> Responding to Changes with create_effect</a></li><li class="chapter-item expanded "><a href="../15_global_state.html"><strong aria-hidden="true">9.</strong> Global State Management</a></li><li class="chapter-item expanded "><a href="../router/index.html"><strong aria-hidden="true">10.</strong> Router</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../router/16_routes.html"><strong aria-hidden="true">10.1.</strong> Defining &lt;Routes/&gt;</a></li><li class="chapter-item expanded "><a href="../router/17_nested_routing.html"><strong aria-hidden="true">10.2.</strong> Nested Routing</a></li><li class="chapter-item expanded "><a href="../router/18_params_and_queries.html"><strong aria-hidden="true">10.3.</strong> Params and Queries</a></li><li class="chapter-item expanded "><a href="../router/19_a.html"><strong aria-hidden="true">10.4.</strong> &lt;A/&gt;</a></li><li class="chapter-item expanded "><a href="../router/20_form.html"><strong aria-hidden="true">10.5.</strong> &lt;Form/&gt;</a></li></ol></li><li class="chapter-item expanded "><a href="../interlude_styling.html"><strong aria-hidden="true">11.</strong> Interlude: Styling</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.</strong> Metadata</div></li><li class="chapter-item expanded "><a href="../ssr/index.html"><strong aria-hidden="true">13.</strong> Server Side Rendering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ssr/21_cargo_leptos.html"><strong aria-hidden="true">13.1.</strong> cargo-leptos</a></li><li class="chapter-item expanded "><a href="../ssr/22_life_cycle.html"><strong aria-hidden="true">13.2.</strong> The Life of a Page Load</a></li><li class="chapter-item expanded "><a href="../ssr/23_ssr_modes.html"><strong aria-hidden="true">13.3.</strong> Async Rendering and SSR “Modes”</a></li><li class="chapter-item expanded "><a href="../ssr/24_hydration_bugs.html"><strong aria-hidden="true">13.4.</strong> Hydration Bugs</a></li></ol></li><li class="chapter-item expanded "><a href="../server/index.html"><strong aria-hidden="true">14.</strong> Working with the Server</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../server/25_server_functions.html"><strong aria-hidden="true">14.1.</strong> Server Functions</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.2.</strong> Request/Response</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.</strong> Extractors</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.1.</strong> Axum</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.2.</strong> Actix</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.4.</strong> Headers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.5.</strong> Cookies</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.</strong> Building Full-Stack Apps</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">15.1.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.2.</strong> Forms</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.3.</strong> &lt;ActionForm/&gt;s</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.4.</strong> Turning off WebAssembly: Progressive Enhancement and Graceful Degradation</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">16.</strong> Advanced Reactivity</div></li><li class="chapter-item expanded "><a href="../appendix_binary_size.html"><strong aria-hidden="true">17.</strong> Appendix: Optimizing WASM Binary Size</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="components-and-props"><a class="header" href="#components-and-props">Components and Props</a></h1>
+<p>So far, we’ve been building our whole application in a single component. This
+is fine for really tiny examples, but in any real application you’ll need to
+break the user interface out into multiple components, so you can break your
+interface down into smaller, reusable, composable chunks.</p>
+<p>Let’s take our progress bar example. Imagine that you want two progress bars
+instead of one: one that advances one tick per click, one that advances two ticks
+per click.</p>
+<p>You <em>could</em> do this by just creating two <code>&lt;progress&gt;</code> elements:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let (count, set_count) = create_signal(cx, 0);
+let double_count = move || count() * 2;
+
+view! { cx,
+    &lt;progress
+        max=&quot;50&quot;
+        value=count
+    /&gt;
+    &lt;progress
+        max=&quot;50&quot;
+        value=double_count
+    /&gt;
+}
+<span class="boring">}</span></code></pre></pre>
+<p>But of course, this doesn’t scale very well. If you want to add a third progress
+bar, you need to add this code another time. And if you want to edit anything
+about it, you need to edit it in triplicate.</p>
+<p>Instead, let’s create a <code>&lt;ProgressBar/&gt;</code> component.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn ProgressBar(
+    cx: Scope
+) -&gt; impl IntoView {
+    view! { cx,
+        &lt;progress
+            max=&quot;50&quot;
+            // hmm... where will we get this from?
+            value=progress
+        /&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>There’s just one problem: <code>progress</code> is not defined. Where should it come from?
+When we were defining everything manually, we just used the local variable names.
+Now we need some way to pass an argument into the component.</p>
+<h2 id="component-props"><a class="header" href="#component-props">Component Props</a></h2>
+<p>We do this using component properties, or “props.” If you’ve used another frontend
+framework, this is probably a familiar idea. Basically, properties are to components
+as attributes are to HTML elements: they let you pass additional information into
+the component.</p>
+<p>In Leptos, you define props by giving additional arguments to the component function.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn ProgressBar(
+    cx: Scope,
+    progress: ReadSignal&lt;i32&gt;
+) -&gt; impl IntoView {
+    view! { cx,
+        &lt;progress
+            max=&quot;50&quot;
+            // now this works
+            value=progress
+        /&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Now we can use our component in the main <code>&lt;App/&gt;</code> component’s view.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn App(cx: Scope) -&gt; impl IntoView {
+    let (count, set_count) = create_signal(cx, 0);
+    view! { cx,
+        &lt;button on:click=move |_| { set_count.update(|n| *n += 1); }&gt;
+            &quot;Click me&quot;
+        &lt;/button&gt;
+        // now we use our component!
+        &lt;ProgressBar progress=count/&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Using a component in the view looks a lot like using an HTML element. You’ll
+notice that you can easily tell the difference between an element and a component
+because components always have <code>PascalCase</code> names. You pass the <code>progress</code> prop
+in as if it were an HTML element attribute. Simple.</p>
+<blockquote>
+<h3 id="important-note"><a class="header" href="#important-note">Important Note</a></h3>
+<p>For every <code>Component</code>, Leptos generates a corresponding <code>ComponentProps</code> type. This
+is what allows us to have named props, when Rust does not have named function parameters.
+If you’re defining a component in one module and importing it into another, make
+sure you include this <code>ComponentProps</code> type:</p>
+<p><code>use progress_bar::{ProgressBar, ProgressBarProps};</code></p>
+<p><strong>Note</strong>: This is still true as of <code>0.2.5</code>, but the requirement has been removed on <code>main</code>
+and will not apply to later versions.</p>
+</blockquote>
+<h3 id="reactive-and-static-props"><a class="header" href="#reactive-and-static-props">Reactive and Static Props</a></h3>
+<p>You’ll notice that throughout this example, <code>progress</code> takes a reactive
+<code>ReadSignal&lt;i32&gt;</code>, and not a plain <code>i32</code>. This is <strong>very important</strong>.</p>
+<p>Component props have no special meaning attached to them. A component is simply
+a function that runs once to set up the user interface. The only way to tell the
+interface to respond to changing is to pass it a signal type. So if you have a
+component property that will change over time, like our <code>progress</code>, it should
+be a signal.</p>
+<h3 id="optional-props"><a class="header" href="#optional-props"><code>optional</code> Props</a></h3>
+<p>Right now the <code>max</code> setting is hard-coded. Let’s take that as a prop too. But
+let’s add a catch: let’s make this prop optional by annotating the particular
+argument to the component function with <code>#[prop(optional)]</code>.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn ProgressBar(
+    cx: Scope,
+    // mark this prop optional
+    // you can specify it or not when you use &lt;ProgressBar/&gt;
+    #[prop(optional)]
+    max: u16,
+    progress: ReadSignal&lt;i32&gt;
+) -&gt; impl IntoView {
+    view! { cx,
+        &lt;progress
+            max=max
+            value=progress
+        /&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Now, we can use <code>&lt;ProgressBar max=50 value=count/&gt;</code>, or we can omit <code>max</code>
+to use the default value (i.e., <code>&lt;ProgressBar value=count/&gt;</code>). The default value
+on an <code>optional</code> is its <code>Default::default()</code> value, which for a <code>u16</code> is going to
+be <code>0</code>. In the case of a progress bar, a max value of <code>0</code> is not very useful.</p>
+<p>So let’s give it a particular default value instead.</p>
+<h3 id="default-props"><a class="header" href="#default-props"><code>default</code> props</a></h3>
+<p>You can specify a default value other than <code>Default::default()</code> pretty simply
+with <code>#[prop(default = ...)</code>.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn ProgressBar(
+    cx: Scope,
+    #[prop(default = 100)]
+    max: u16,
+    progress: ReadSignal&lt;i32&gt;
+) -&gt; impl IntoView {
+    view! { cx,
+        &lt;progress
+            max=max
+            value=progress
+        /&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<h3 id="generic-props"><a class="header" href="#generic-props">Generic Props</a></h3>
+<p>This is great. But we began with two counters, one driven by <code>count</code>, and one by
+the derived signal <code>double_count</code>. Let’s recreate that by using <code>double_count</code>
+as the <code>progress</code> prop on another <code>&lt;ProgressBar/&gt;</code>.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn App(cx: Scope) -&gt; impl IntoView {
+    let (count, set_count) = create_signal(cx, 0);
+    let double_count = move || count() * 2;
+
+    view! { cx,
+        &lt;button on:click=move |_| { set_count.update(|n| *n += 1); }&gt;
+            &quot;Click me&quot;
+        &lt;/button&gt;
+        &lt;ProgressBar progress=count/&gt;
+        // add a second progress bar
+        &lt;ProgressBar progress=double_count/&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Hm... this won’t compile. It should be pretty easy to understand why: we’ve declared
+that the <code>progress</code> prop takes <code>ReadSignal&lt;i32&gt;</code>, and <code>double_count</code> is not
+<code>ReadSignal&lt;i32&gt;</code>. As rust-analyzer will tell you, its type is <code>|| -&gt; i32</code>, i.e.,
+it’s a closure that returns an <code>i32</code>.</p>
+<p>There are a couple ways to handle this. One would be to say: “Well, I know that
+a <code>ReadSignal</code> is a function, and I know that a closure is a function; maybe I
+could just take any function?” If you’re savvy, you may know that both these
+implement the trait <code>Fn() -&gt; i32</code>. So you could use a generic component:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn ProgressBar&lt;F&gt;(
+    cx: Scope,
+    #[prop(default = 100)]
+    max: u16,
+    progress: F
+) -&gt; impl IntoView
+where
+    F: Fn() -&gt; i32 + 'static,
+{
+    view! { cx,
+        &lt;progress
+            max=max
+            value=progress
+        /&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>This is a perfectly reasonable way to write this component: <code>progress</code> now takes
+any value that implements this <code>Fn()</code> trait.</p>
+<blockquote>
+<p>Note that generic component props <em>cannot</em> be specified inline (as <code>&lt;F: Fn() -&gt; i32&gt;</code>)
+or as <code>progress: impl Fn() -&gt; i32 + 'static,</code>, in part because they’re actually used to generate
+a <code>struct ProgressBarProps</code>, and struct fields cannot be <code>impl</code> types.</p>
+</blockquote>
+<h3 id="into-props"><a class="header" href="#into-props"><code>into</code> Props</a></h3>
+<p>There’s one more way we could implement this, and it would be to use <code>#[prop(into)]</code>.
+This attribute automatically calls <code>.into()</code> on the values you pass as props,
+which allows you to easily pass props with different values.</p>
+<p>In this case, it’s helpful to know about the
+<a href="https://docs.rs/leptos/latest/leptos/struct.Signal.html"><code>Signal</code></a> type. <code>Signal</code>
+is an enumerated type that represents any kind of readable reactive signal. It can
+be useful when defining APIs for components you’ll want to reuse while passing
+different sorts of signals. The <a href="https://docs.rs/leptos/latest/leptos/enum.MaybeSignal.html"><code>MaybeSignal</code></a> type is useful when you want to be able to take either a static or
+reactive value.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn ProgressBar(
+    cx: Scope,
+    #[prop(default = 100)]
+    max: u16,
+    #[prop(into)]
+    progress: Signal&lt;i32&gt;
+) -&gt; impl IntoView
+{
+    view! { cx,
+        &lt;progress
+            max=max
+            value=progress
+        /&gt;
+    }
+}
+
+#[component]
+fn App(cx: Scope) -&gt; impl IntoView {
+    let (count, set_count) = create_signal(cx, 0);
+    let double_count = move || count() * 2;
+
+    view! { cx,
+        &lt;button on:click=move |_| { set_count.update(|n| *n += 1); }&gt;
+            &quot;Click me&quot;
+        &lt;/button&gt;
+        // .into() converts `ReadSignal` to `Signal`
+        &lt;ProgressBar progress=count/&gt;
+        // use `Signal::derive()` to wrap a derived signal
+        &lt;ProgressBar progress=Signal::derive(cx, double_count)/&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="documenting-components"><a class="header" href="#documenting-components">Documenting Components</a></h2>
+<p>This is one of the least essential but most important sections of this book.
+It’s not strictly necessary to document your components and their props. It may
+be very important, depending on the size of your team and your app. But it’s very
+easy, and bears immediate fruit.</p>
+<p>To document a component and its props, you can simply add doc comments on the
+component function, and each one of the props:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// Shows progress toward a goal.
+#[component]
+fn ProgressBar(
+    cx: Scope,
+    /// The maximum value of the progress bar.
+    #[prop(default = 100)]
+    max: u16,
+    /// How much progress should be displayed.
+    #[prop(into)]
+    progress: Signal&lt;i32&gt;,
+) -&gt; impl IntoView {
+    /* ... */
+}
+<span class="boring">}</span></code></pre></pre>
+<p>That’s all you need to do. These behave like ordinary Rust doc comments, except
+that you can document individual component props, which can’t be done with Rust
+function arguments.</p>
+<p>This will automatically generate documentation for your component, its <code>Props</code>
+type, and each of the fields used to add props. It can be a little hard to
+understand how powerful this is until you hover over the component name or props
+and see the power of the <code>#[component]</code> macro combined with rust-analyzer here.</p>
+<p><a href="https://codesandbox.io/p/sandbox/3-components-50t2e7?file=%2Fsrc%2Fmain.rs&amp;selection=%5B%7B%22endColumn%22%3A1%2C%22endLineNumber%22%3A7%2C%22startColumn%22%3A1%2C%22startLineNumber%22%3A7%7D%5D">Click to open CodeSandbox.</a></p>
+<iframe src="https://codesandbox.io/p/sandbox/3-components-50t2e7?file=%2Fsrc%2Fmain.rs&selection=%5B%7B%22endColumn%22%3A1%2C%22endLineNumber%22%3A7%2C%22startColumn%22%3A1%2C%22startLineNumber%22%3A7%7D%5D" width="100%" height="1000px" style="max-height: 100vh"></iframe>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../view/02_dynamic_attributes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../view/04_iteration.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../view/02_dynamic_attributes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../view/04_iteration.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Global State Management</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="01_introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="02_getting_started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="view/index.html"><strong aria-hidden="true">3.</strong> Building User Interfaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="view/01_basic_component.html"><strong aria-hidden="true">3.1.</strong> A Basic Component</a></li><li class="chapter-item expanded "><a href="view/02_dynamic_attributes.html"><strong aria-hidden="true">3.2.</strong> Dynamic Attributes</a></li><li class="chapter-item expanded "><a href="view/03_components.html"><strong aria-hidden="true">3.3.</strong> Components and Props</a></li><li class="chapter-item expanded "><a href="view/04_iteration.html"><strong aria-hidden="true">3.4.</strong> Iteration</a></li><li class="chapter-item expanded "><a href="view/05_forms.html"><strong aria-hidden="true">3.5.</strong> Forms and Inputs</a></li><li class="chapter-item expanded "><a href="view/06_control_flow.html"><strong aria-hidden="true">3.6.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="view/07_errors.html"><strong aria-hidden="true">3.7.</strong> Error Handling</a></li><li class="chapter-item expanded "><a href="view/08_parent_child.html"><strong aria-hidden="true">3.8.</strong> Parent-Child Communication</a></li><li class="chapter-item expanded "><a href="view/09_component_children.html"><strong aria-hidden="true">3.9.</strong> Passing Children to Components</a></li></ol></li><li class="chapter-item expanded "><a href="interlude_functions.html"><strong aria-hidden="true">4.</strong> Interlude: Reactivity and Functions</a></li><li class="chapter-item expanded "><a href="testing.html"><strong aria-hidden="true">5.</strong> Testing</a></li><li class="chapter-item expanded "><a href="async/index.html"><strong aria-hidden="true">6.</strong> Async</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="async/10_resources.html"><strong aria-hidden="true">6.1.</strong> Loading Data with Resources</a></li><li class="chapter-item expanded "><a href="async/11_suspense.html"><strong aria-hidden="true">6.2.</strong> Suspense</a></li><li class="chapter-item expanded "><a href="async/12_transition.html"><strong aria-hidden="true">6.3.</strong> Transition</a></li><li class="chapter-item expanded "><a href="async/13_actions.html"><strong aria-hidden="true">6.4.</strong> Actions</a></li></ol></li><li class="chapter-item expanded "><a href="interlude_projecting_children.html"><strong aria-hidden="true">7.</strong> Interlude: Projecting Children</a></li><li class="chapter-item expanded "><a href="14_create_effect.html"><strong aria-hidden="true">8.</strong> Responding to Changes with create_effect</a></li><li class="chapter-item expanded "><a href="15_global_state.html" class="active"><strong aria-hidden="true">9.</strong> Global State Management</a></li><li class="chapter-item expanded "><a href="router/index.html"><strong aria-hidden="true">10.</strong> Router</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="router/16_routes.html"><strong aria-hidden="true">10.1.</strong> Defining &lt;Routes/&gt;</a></li><li class="chapter-item expanded "><a href="router/17_nested_routing.html"><strong aria-hidden="true">10.2.</strong> Nested Routing</a></li><li class="chapter-item expanded "><a href="router/18_params_and_queries.html"><strong aria-hidden="true">10.3.</strong> Params and Queries</a></li><li class="chapter-item expanded "><a href="router/19_a.html"><strong aria-hidden="true">10.4.</strong> &lt;A/&gt;</a></li><li class="chapter-item expanded "><a href="router/20_form.html"><strong aria-hidden="true">10.5.</strong> &lt;Form/&gt;</a></li></ol></li><li class="chapter-item expanded "><a href="interlude_styling.html"><strong aria-hidden="true">11.</strong> Interlude: Styling</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.</strong> Metadata</div></li><li class="chapter-item expanded "><a href="ssr/index.html"><strong aria-hidden="true">13.</strong> Server Side Rendering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ssr/21_cargo_leptos.html"><strong aria-hidden="true">13.1.</strong> cargo-leptos</a></li><li class="chapter-item expanded "><a href="ssr/22_life_cycle.html"><strong aria-hidden="true">13.2.</strong> The Life of a Page Load</a></li><li class="chapter-item expanded "><a href="ssr/23_ssr_modes.html"><strong aria-hidden="true">13.3.</strong> Async Rendering and SSR “Modes”</a></li><li class="chapter-item expanded "><a href="ssr/24_hydration_bugs.html"><strong aria-hidden="true">13.4.</strong> Hydration Bugs</a></li></ol></li><li class="chapter-item expanded "><a href="server/index.html"><strong aria-hidden="true">14.</strong> Working with the Server</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="server/25_server_functions.html"><strong aria-hidden="true">14.1.</strong> Server Functions</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.2.</strong> Request/Response</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.</strong> Extractors</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.1.</strong> Axum</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.2.</strong> Actix</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.4.</strong> Headers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.5.</strong> Cookies</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.</strong> Building Full-Stack Apps</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">15.1.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.2.</strong> Forms</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.3.</strong> &lt;ActionForm/&gt;s</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.4.</strong> Turning off WebAssembly: Progressive Enhancement and Graceful Degradation</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">16.</strong> Advanced Reactivity</div></li><li class="chapter-item expanded "><a href="appendix_binary_size.html"><strong aria-hidden="true">17.</strong> Appendix: Optimizing WASM Binary Size</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="global-state-management"><a class="header" href="#global-state-management">Global State Management</a></h1>
+<p>So far, we've only been working with local state in components
+We've only seen how to communicate between parent and child components
+But there are also more general ways to manage global state</p>
+<p>The three best approaches to global state are</p>
+<ol>
+<li>Using the router to drive global state via the URL</li>
+<li>Passing signals through context</li>
+<li>Creating a global state struct and creating lenses into it with <code>create_slice</code></li>
+</ol>
+<h2 id="option-1-url-as-global-state"><a class="header" href="#option-1-url-as-global-state">Option #1: URL as Global State</a></h2>
+<p>The next few sections of the tutorial will be about the router.
+So for now, we'll just look at options #2 and #3.</p>
+<h2 id="option-2-passing-signals-through-context"><a class="header" href="#option-2-passing-signals-through-context">Option #2: Passing Signals through Context</a></h2>
+<p>In virtual DOM libraries like React, using the Context API to manage global
+state is a bad idea: because the entire app exists in a tree, changing
+some value provided high up in the tree can cause the whole app to render.</p>
+<p>In fine-grained reactive libraries like Leptos, this is simply not the case.
+You can create a signal in the root of your app and pass it down to other
+components using provide_context(). Changing it will only cause rerendering
+in the specific places it is actually used, not the whole app.</p>
+<p>We start by creating a signal in the root of the app and providing it to
+all its children and descendants using <code>provide_context</code>.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn App(cx: Scope) -&gt; impl IntoView {
+    // here we create a signal in the root that can be consumed
+    // anywhere in the app.
+    let (count, set_count) = create_signal(cx, 0);
+    // we'll pass the setter to specific components,
+    // but provide the count itself to the whole app via context
+    provide_context(cx, count);
+
+    view! { cx,
+        // SetterButton is allowed to modify the count
+        &lt;SetterButton set_count/&gt;
+        // These consumers can only read from it
+        // But we could give them write access by passing `set_count` if we wanted
+        &lt;FancyMath/&gt;
+        &lt;ListItems/&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p><code>&lt;SetterButton/&gt;</code> is the kind of counter we’ve written several times now.
+(See the sandbox below if you don’t understand what I mean.)</p>
+<p><code>&lt;FancyMath/&gt;</code> and <code>&lt;ListItems/&gt;</code> both consume the signal we’re providing via
+<code>use_context</code> and do something with it.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A component that does some &quot;fancy&quot; math with the global count
+#[component]
+fn FancyMath(cx: Scope) -&gt; impl IntoView {
+    // here we consume the global count signal with `use_context`
+    let count = use_context::&lt;ReadSignal&lt;u32&gt;&gt;(cx)
+        // we know we just provided this in the parent component
+        .expect(&quot;there to be a `count` signal provided&quot;);
+    let is_even = move || count() &amp; 1 == 0;
+
+    view! { cx,
+        &lt;div class=&quot;consumer blue&quot;&gt;
+            &quot;The number &quot;
+            &lt;strong&gt;{count}&lt;/strong&gt;
+            {move || if is_even() {
+                &quot; is&quot;
+            } else {
+                &quot; is not&quot;
+            }}
+            &quot; even.&quot;
+        &lt;/div&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>This kind of “provide a signal in a parent, consume it in a child” should be familiar
+from the chapter on <a href="./view/08_parent_child.html">parent-child interactions</a>. The same
+pattern you use to communicate between parents and children works for grandparents and
+grandchildren, or any ancestors and descendants: in other words, between “global” state
+in the root component of your app and any other components anywhere else in the app.</p>
+<p>Because of the fine-grained nature of updates, this is usually all you need. However,
+in some cases with more complex state changes, you may want to use a slightly more
+structured approach to global state.</p>
+<h2 id="option-3-create-a-global-state-struct"><a class="header" href="#option-3-create-a-global-state-struct">Option #3: Create a Global State Struct</a></h2>
+<p>You can use this approach to build a single global data structure
+that holds the state for your whole app, and then access it by
+taking fine-grained slices using
+<a href="https://docs.rs/leptos/latest/leptos/fn.create_slice.html"><code>create_slice</code></a>
+or <a href="https://docs.rs/leptos/latest/leptos/fn.create_memo.html"><code>create_memo</code></a>,
+so that changing one part of the state doesn't cause parts of your
+app that depend on other parts of the state to change.</p>
+<p>You can begin by defining a simple state struct:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Default, Clone, Debug)]
+struct GlobalState {
+    count: u32,
+    name: String,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Provide it in the root of your app so it’s available everywhere.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+fn App(cx: Scope) -&gt; impl IntoView {
+    // we'll provide a single signal that holds the whole state
+    // each component will be responsible for creating its own &quot;lens&quot; into it
+    let state = create_rw_signal(cx, GlobalState::default());
+    provide_context(cx, state);
+
+    // ...
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Then child components can access “slices” of that state with fine-grained
+updates via <code>create_slice</code>. Each slice signal only updates when the particular
+piece of the larger struct it accesses updates. This means you can create a single
+root signal, and then take independent, fine-grained slices of it in different
+components, each of which can update without notifying the others of changes.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// A component that updates the count in the global state.
+#[component]
+fn GlobalStateCounter(cx: Scope) -&gt; impl IntoView {
+    let state = use_context::&lt;RwSignal&lt;GlobalState&gt;&gt;(cx).expect(&quot;state to have been provided&quot;);
+
+    // `create_slice` lets us create a &quot;lens&quot; into the data
+    let (count, set_count) = create_slice(
+        cx,
+        // we take a slice *from* `state`
+        state,
+        // our getter returns a &quot;slice&quot; of the data
+        |state| state.count,
+        // our setter describes how to mutate that slice, given a new value
+        |state, n| state.count = n,
+    );
+
+    view! { cx,
+        &lt;div class=&quot;consumer blue&quot;&gt;
+            &lt;button
+                on:click=move |_| {
+                    set_count(count() + 1);
+                }
+            &gt;
+                &quot;Increment Global Count&quot;
+            &lt;/button&gt;
+            &lt;br/&gt;
+            &lt;span&gt;&quot;Count is: &quot; {count}&lt;/span&gt;
+        &lt;/div&gt;
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Clicking this button only updates <code>state.count</code>, so if we create another slice
+somewhere else that only takes <code>state.name</code>, clicking the button won’t cause
+that other slice to update. This allows you to combine the benefits of a top-down
+data flow and of fine-grained reactive updates.</p>
+<p><a href="https://codesandbox.io/p/sandbox/1-basic-component-forked-8bte19?selection=%5B%7B%22endColumn%22%3A1%2C%22endLineNumber%22%3A2%2C%22startColumn%22%3A1%2C%22startLineNumber%22%3A2%7D%5D&amp;file=%2Fsrc%2Fmain.rs">Click to open CodeSandbox.</a></p>
+<iframe src="https://codesandbox.io/p/sandbox/1-basic-component-forked-8bte19?selection=%5B%7B%22endColumn%22%3A1%2C%22endLineNumber%22%3A2%2C%22startColumn%22%3A1%2C%22startLineNumber%22%3A2%7D%5D&file=%2Fsrc%2Fmain.rs" width="100%" height="1000px" style="max-height: 100vh"></iframe>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="14_create_effect.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="router/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="14_create_effect.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="router/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

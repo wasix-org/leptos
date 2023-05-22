@@ -1,0 +1,341 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Nested Routing</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../01_introduction.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../02_getting_started.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="../view/index.html"><strong aria-hidden="true">3.</strong> Building User Interfaces</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../view/01_basic_component.html"><strong aria-hidden="true">3.1.</strong> A Basic Component</a></li><li class="chapter-item expanded "><a href="../view/02_dynamic_attributes.html"><strong aria-hidden="true">3.2.</strong> Dynamic Attributes</a></li><li class="chapter-item expanded "><a href="../view/03_components.html"><strong aria-hidden="true">3.3.</strong> Components and Props</a></li><li class="chapter-item expanded "><a href="../view/04_iteration.html"><strong aria-hidden="true">3.4.</strong> Iteration</a></li><li class="chapter-item expanded "><a href="../view/05_forms.html"><strong aria-hidden="true">3.5.</strong> Forms and Inputs</a></li><li class="chapter-item expanded "><a href="../view/06_control_flow.html"><strong aria-hidden="true">3.6.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="../view/07_errors.html"><strong aria-hidden="true">3.7.</strong> Error Handling</a></li><li class="chapter-item expanded "><a href="../view/08_parent_child.html"><strong aria-hidden="true">3.8.</strong> Parent-Child Communication</a></li><li class="chapter-item expanded "><a href="../view/09_component_children.html"><strong aria-hidden="true">3.9.</strong> Passing Children to Components</a></li></ol></li><li class="chapter-item expanded "><a href="../interlude_functions.html"><strong aria-hidden="true">4.</strong> Interlude: Reactivity and Functions</a></li><li class="chapter-item expanded "><a href="../testing.html"><strong aria-hidden="true">5.</strong> Testing</a></li><li class="chapter-item expanded "><a href="../async/index.html"><strong aria-hidden="true">6.</strong> Async</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../async/10_resources.html"><strong aria-hidden="true">6.1.</strong> Loading Data with Resources</a></li><li class="chapter-item expanded "><a href="../async/11_suspense.html"><strong aria-hidden="true">6.2.</strong> Suspense</a></li><li class="chapter-item expanded "><a href="../async/12_transition.html"><strong aria-hidden="true">6.3.</strong> Transition</a></li><li class="chapter-item expanded "><a href="../async/13_actions.html"><strong aria-hidden="true">6.4.</strong> Actions</a></li></ol></li><li class="chapter-item expanded "><a href="../interlude_projecting_children.html"><strong aria-hidden="true">7.</strong> Interlude: Projecting Children</a></li><li class="chapter-item expanded "><a href="../14_create_effect.html"><strong aria-hidden="true">8.</strong> Responding to Changes with create_effect</a></li><li class="chapter-item expanded "><a href="../15_global_state.html"><strong aria-hidden="true">9.</strong> Global State Management</a></li><li class="chapter-item expanded "><a href="../router/index.html"><strong aria-hidden="true">10.</strong> Router</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../router/16_routes.html"><strong aria-hidden="true">10.1.</strong> Defining &lt;Routes/&gt;</a></li><li class="chapter-item expanded "><a href="../router/17_nested_routing.html" class="active"><strong aria-hidden="true">10.2.</strong> Nested Routing</a></li><li class="chapter-item expanded "><a href="../router/18_params_and_queries.html"><strong aria-hidden="true">10.3.</strong> Params and Queries</a></li><li class="chapter-item expanded "><a href="../router/19_a.html"><strong aria-hidden="true">10.4.</strong> &lt;A/&gt;</a></li><li class="chapter-item expanded "><a href="../router/20_form.html"><strong aria-hidden="true">10.5.</strong> &lt;Form/&gt;</a></li></ol></li><li class="chapter-item expanded "><a href="../interlude_styling.html"><strong aria-hidden="true">11.</strong> Interlude: Styling</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">12.</strong> Metadata</div></li><li class="chapter-item expanded "><a href="../ssr/index.html"><strong aria-hidden="true">13.</strong> Server Side Rendering</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../ssr/21_cargo_leptos.html"><strong aria-hidden="true">13.1.</strong> cargo-leptos</a></li><li class="chapter-item expanded "><a href="../ssr/22_life_cycle.html"><strong aria-hidden="true">13.2.</strong> The Life of a Page Load</a></li><li class="chapter-item expanded "><a href="../ssr/23_ssr_modes.html"><strong aria-hidden="true">13.3.</strong> Async Rendering and SSR “Modes”</a></li><li class="chapter-item expanded "><a href="../ssr/24_hydration_bugs.html"><strong aria-hidden="true">13.4.</strong> Hydration Bugs</a></li></ol></li><li class="chapter-item expanded "><a href="../server/index.html"><strong aria-hidden="true">14.</strong> Working with the Server</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../server/25_server_functions.html"><strong aria-hidden="true">14.1.</strong> Server Functions</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.2.</strong> Request/Response</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.</strong> Extractors</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.1.</strong> Axum</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.3.2.</strong> Actix</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.4.</strong> Headers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">14.5.</strong> Cookies</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.</strong> Building Full-Stack Apps</div></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">15.1.</strong> Actions</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.2.</strong> Forms</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.3.</strong> &lt;ActionForm/&gt;s</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">15.4.</strong> Turning off WebAssembly: Progressive Enhancement and Graceful Degradation</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">16.</strong> Advanced Reactivity</div></li><li class="chapter-item expanded "><a href="../appendix_binary_size.html"><strong aria-hidden="true">17.</strong> Appendix: Optimizing WASM Binary Size</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title"></h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="nested-routing"><a class="header" href="#nested-routing">Nested Routing</a></h1>
+<p>We just defined the following set of routes:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;Routes&gt;
+  &lt;Route path=&quot;/&quot; view=|cx| view! { cx, &lt;Home /&gt; }/&gt;
+  &lt;Route path=&quot;/users&quot; view=|cx| view! { cx, &lt;Users /&gt; }/&gt;
+  &lt;Route path=&quot;/users/:id&quot; view=|cx| view! { cx, &lt;UserProfile /&gt; }/&gt;
+  &lt;Route path=&quot;/*any&quot; view=|cx| view! { cx, &lt;NotFound /&gt; }/&gt;
+&lt;/Routes&gt;
+<span class="boring">}</span></code></pre></pre>
+<p>There’s a certain amount of duplication here: <code>/users</code> and <code>/users/:id</code>. This is fine for a small app, but you can probably already tell it won’t scale well. Wouldn’t it be nice if we could nest these routes?</p>
+<p>Well... you can!</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;Routes&gt;
+  &lt;Route path=&quot;/&quot; view=|cx| view! { cx, &lt;Home /&gt; }/&gt;
+  &lt;Route path=&quot;/users&quot; view=|cx| view! { cx, &lt;Users /&gt; }&gt;
+    &lt;Route path=&quot;:id&quot; view=|cx| view! { cx, &lt;UserProfile /&gt; }/&gt;
+  &lt;/Route&gt;
+  &lt;Route path=&quot;/*any&quot; view=|cx| view! { cx, &lt;NotFound /&gt; }/&gt;
+&lt;/Routes&gt;
+<span class="boring">}</span></code></pre></pre>
+<p>But wait. We’ve just subtly changed what our application does.</p>
+<p>The next section is one of the most important in this entire routing section of the guide. Read it carefully, and feel free to ask questions if there’s anything you don’t understand.</p>
+<h1 id="nested-routes-as-layout"><a class="header" href="#nested-routes-as-layout">Nested Routes as Layout</a></h1>
+<p>Nested routes are a form of layout, not a method of route definition.</p>
+<p>Let me put that another way: The goal of defining nested routes is not primarily to avoid repeating yourself when typing out the paths in your route definitions. It is actually to tell the router to display multiple <code>&lt;Route/&gt;</code>s on the page at the same time, side by side.</p>
+<p>Let’s look back at our practical example.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;Routes&gt;
+  &lt;Route path=&quot;/users&quot; view=|cx| view! { cx, &lt;Users /&gt; }/&gt;
+  &lt;Route path=&quot;/users/:id&quot; view=|cx| view! { cx, &lt;UserProfile /&gt; }/&gt;
+&lt;/Routes&gt;
+<span class="boring">}</span></code></pre></pre>
+<p>This means:</p>
+<ul>
+<li>If I go to <code>/users</code>, I get the <code>&lt;Users/&gt;</code> component.</li>
+<li>If I go to <code>/users/3</code>, I get the <code>&lt;UserProfile/&gt;</code> component (with the parameter <code>id</code> set to <code>3</code>; more on that later)</li>
+</ul>
+<p>Let’s say I use nested routes instead:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;Routes&gt;
+  &lt;Route path=&quot;/users&quot; view=|cx| view! { cx, &lt;Users /&gt; }&gt;
+    &lt;Route path=&quot;:id&quot; view=|cx| view! { cx, &lt;UserProfile /&gt; }/&gt;
+  &lt;/Route&gt;
+&lt;/Routes&gt;
+<span class="boring">}</span></code></pre></pre>
+<p>This means:</p>
+<ul>
+<li>If I go to <code>/users/3</code>, the path matches two <code>&lt;Route/&gt;</code>s: <code>&lt;Users/&gt;</code> and <code>&lt;UserProfile/&gt;</code>.</li>
+<li>If I go to <code>/users</code>, the path is not matched.</li>
+</ul>
+<p>I actually need to add a fallback route</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;Routes&gt;
+  &lt;Route path=&quot;/users&quot; view=|cx| view! { cx, &lt;Users /&gt; }&gt;
+    &lt;Route path=&quot;:id&quot; view=|cx| view! { cx, &lt;UserProfile /&gt; }/&gt;
+    &lt;Route path=&quot;&quot; view=|cx| view! { cx, &lt;NoUser /&gt; }/&gt;
+  &lt;/Route&gt;
+&lt;/Routes&gt;
+<span class="boring">}</span></code></pre></pre>
+<p>Now:</p>
+<ul>
+<li>If I go to <code>/users/3</code>, the path matches <code>&lt;Users/&gt;</code> and <code>&lt;UserProfile/&gt;</code>.</li>
+<li>If I go to <code>/users</code>, the path matches <code>&lt;Users/&gt;</code> and <code>&lt;NoUser/&gt;</code>.</li>
+</ul>
+<p>When I use nested routes, in other words, each <strong>path</strong> can match multiple <strong>routes</strong>: each URL can render the views provided by multiple <code>&lt;Route/&gt;</code> components, at the same time, on the same page.</p>
+<p>This may be counter-intuitive, but it’s very powerful, for reasons you’ll hopefully see in a few minutes.</p>
+<h2 id="why-nested-routing"><a class="header" href="#why-nested-routing">Why Nested Routing?</a></h2>
+<p>Why bother with this?</p>
+<p>Most web applications contain levels of navigation that correspond to different parts of the layout. For example, in an email app you might have a URL like <code>/contacts/greg</code>, which shows a list of contacts on the left of the screen, and contact details for Greg on the right of the screen. The contact list and the contact details should always appear on the screen at the same time. If there’s no contact selected, maybe you want to show a little instructional text.</p>
+<p>You can easily define this with nested routes</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;Routes&gt;
+  &lt;Route path=&quot;/contacts&quot; view=|cx| view! { cx, &lt;ContactList/&gt; }&gt;
+    &lt;Route path=&quot;:id&quot; view=|cx| view! { cx, &lt;ContactInfo/&gt; }/&gt;
+    &lt;Route path=&quot;&quot; view=|cx| view! { cx,
+      &lt;p&gt;&quot;Select a contact to view more info.&quot;&lt;/p&gt;
+    }/&gt;
+  &lt;/Route&gt;
+&lt;/Routes&gt;
+<span class="boring">}</span></code></pre></pre>
+<p>You can go even deeper. Say you want to have tabs for each contact’s address, email/phone, and your conversations with them. You can add <em>another</em> set of nested routes inside <code>:id</code>:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>&lt;Routes&gt;
+  &lt;Route path=&quot;/contacts&quot; view=|cx| view! { cx, &lt;ContactList/&gt; }&gt;
+    &lt;Route path=&quot;:id&quot; view=|cx| view! { cx, &lt;ContactInfo/&gt; }&gt;
+      &lt;Route path=&quot;&quot; view=|cx| view! { cx, &lt;EmailAndPhone/&gt; }/&gt;
+      &lt;Route path=&quot;address&quot; view=|cx| view! { cx, &lt;Address/&gt; }/&gt;
+      &lt;Route path=&quot;messages&quot; view=|cx| view! { cx, &lt;Messages/&gt; }/&gt;
+    &lt;/Route&gt;
+    &lt;Route path=&quot;&quot; view=|cx| view! { cx,
+      &lt;p&gt;&quot;Select a contact to view more info.&quot;&lt;/p&gt;
+    }/&gt;
+  &lt;/Route&gt;
+&lt;/Routes&gt;
+<span class="boring">}</span></code></pre></pre>
+<blockquote>
+<p>The main page of the <a href="https://remix.run/">Remix website</a>, a React framework from the creators of React Router, has a great visual example if you scroll down, with three levels of nested routing: Sales &gt; Invoices &gt; an invoice.</p>
+</blockquote>
+<h2 id="outlet"><a class="header" href="#outlet"><code>&lt;Outlet/&gt;</code></a></h2>
+<p>Parent routes do not automatically render their nested routes. After all, they are just components; they don’t know exactly where they should render their children, and “just stick at at the end of the parent component” is not a great answer.</p>
+<p>Instead, you tell a parent component where to render any nested components with an <code>&lt;Outlet/&gt;</code> component. The <code>&lt;Outlet/&gt;</code> simply renders one of two things:</p>
+<ul>
+<li>if there is no nested route that has been matched, it shows nothing</li>
+<li>if there is a nested route that has been matched, it shows its <code>view</code></li>
+</ul>
+<p>That’s all! But it’s important to know and to remember, because it’s a common source of “Why isn’t this working?” frustration. If you don’t provide an <code>&lt;Outlet/&gt;</code>, the nested route won’t be displayed.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[component]
+pub fn ContactList(cx: Scope) -&gt; impl IntoView {
+  let contacts = todo!();
+
+  view! { cx,
+    &lt;div style=&quot;display: flex&quot;&gt;
+      // the contact list
+      &lt;For each=contacts
+        key=|contact| contact.id
+        view=|cx, contact| todo!()
+      &gt;
+      // the nested child, if any
+      // don’t forget this!
+      &lt;Outlet/&gt;
+    &lt;/div&gt;
+  }
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="nested-routing-and-performance"><a class="header" href="#nested-routing-and-performance">Nested Routing and Performance</a></h2>
+<p>All of this is nice, conceptually, but again—what’s the big deal?</p>
+<p>Performance.</p>
+<p>In a fine-grained reactive library like Leptos, it’s always important to do the least amount of rendering work you can. Because we’re working with real DOM nodes and not diffing a virtual DOM, we want to “rerender” components as infrequently as possible. Nested routing makes this extremely easy.</p>
+<p>Imagine my contact list example. If I navigate from Greg to Alice to Bob and back to Greg, the contact information needs to change on each navigation. But the <code>&lt;ContactList/&gt;</code> should never be rerendered. Not only does this save on rendering performance, it also maintains state in the UI. For example, if I have a search bar at the top of <code>&lt;ContactList/&gt;</code>, navigating from Greg to Alice to Bob won’t clear the search.</p>
+<p>In fact, in this case, we don’t even need to rerender the <code>&lt;Contact/&gt;</code> component when moving between contacts. The router will just reactively update the <code>:id</code> parameter as we navigate, allowing us to make fine-grained updates. As we navigate between contacts, we’ll update single text nodes to change the contact’s name, address, and so on, without doing <em>any</em> additional rerendering.</p>
+<blockquote>
+<p>This sandbox includes a couple features (like nested routing) discussed in this section and the previous one, and a couple we’ll cover in the rest of this chapter. The router is such an integrated system that it makes sense to provide a single example, so don’t be surprised if there’s anything you don’t understand.</p>
+</blockquote>
+<p><a href="https://codesandbox.io/p/sandbox/16-router-fy4tjv?file=%2Fsrc%2Fmain.rs&amp;selection=%5B%7B%22endColumn%22%3A1%2C%22endLineNumber%22%3A3%2C%22startColumn%22%3A1%2C%22startLineNumber%22%3A3%7D%5D">Click to open CodeSandbox.</a></p>
+<iframe src="https://codesandbox.io/p/sandbox/16-router-fy4tjv?file=%2Fsrc%2Fmain.rs&selection=%5B%7B%22endColumn%22%3A1%2C%22endLineNumber%22%3A3%2C%22startColumn%22%3A1%2C%22startLineNumber%22%3A3%7D%5D" width="100%" height="1000px" style="max-height: 100vh"></iframe>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../router/16_routes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="../router/18_params_and_queries.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../router/16_routes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="../router/18_params_and_queries.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
